@@ -26,13 +26,17 @@ Ray::Ray(glm::vec3 d)
 void ObjectManager::loadObjFile(const std::string&objName ,const std::string& objFilename) {
     ObjObject obj;
     tinyobj::ObjReader reader;
+    obj.triangleStartIndex = triangles.size();
+
+    
+    /*
     // default parameters for objects
     float ambientStrength = 0.2f;
     float specularStrength = 0.5f;
     float shininess = 15.0f;
 
     obj.objProperties = glm::vec3(ambientStrength, specularStrength, shininess);
-
+    */
 
     if (!reader.ParseFromFile(objFilename)) {
         if (!reader.Error().empty()) {
@@ -49,7 +53,7 @@ void ObjectManager::loadObjFile(const std::string&objName ,const std::string& ob
     auto& shapes = reader.GetShapes();
     auto& materials = reader.GetMaterials();
 
-    std::vector<Triangle> triangles;
+    // std::vector<Triangle> triangles;
 
 
     // New
@@ -59,12 +63,12 @@ void ObjectManager::loadObjFile(const std::string&objName ,const std::string& ob
         if (!material.diffuse_texname.empty()) {
             int width, height, channels;
             std::string texturePath = material.diffuse_texname;
-            if (obj.textureData.find(texturePath) == obj.textureData.end()) {
+            if (textureData.find(texturePath) == textureData.end()) {
                 unsigned char* data = stbi_load(texturePath.c_str(), &width, &height, &channels, 3);
                 // std::cout << material.diffuse_texname;
                 if (data) {
-                    obj.textureData[texturePath] = data;
-                    obj.textureDimensions[texturePath] = glm::ivec2(width, height);
+                    textureData[texturePath] = data;
+                    textureDimensions[texturePath] = glm::ivec2(width, height);
                 }
                 else {
                     std::cerr << "Failed to load texture: " << texturePath << std::endl;
@@ -111,9 +115,9 @@ void ObjectManager::loadObjFile(const std::string&objName ,const std::string& ob
                         int materialID = shapes[s].mesh.material_ids[f];
                         if (materialID >= 0 && materialID < int(materials.size())) {
                             texturePath = materials[materialID].diffuse_texname;
-                            if (!texturePath.empty() && obj.textureData.count(texturePath)) {
-                                unsigned char* texData = obj.textureData[texturePath];
-                                glm::ivec2 texDim = obj.textureDimensions[texturePath];
+                            if (!texturePath.empty() && textureData.count(texturePath)) {
+                                unsigned char* texData = textureData[texturePath];
+                                glm::ivec2 texDim = textureDimensions[texturePath];
 
                                 // Ensure valid texture dimensions
                                 if (texDim.x > 0 && texDim.y > 0 && texData) {
@@ -202,31 +206,25 @@ void ObjectManager::loadObjFile(const std::string&objName ,const std::string& ob
             index_offset += fv;
         }
     }
+    obj.triangleEndIndex = triangles.size();
+    objObjects.insert({objName, obj});
+    // std::cout << "Triangles: " << obj.triangleStartIndex << " to " << obj.triangleEndIndex << std::endl;
+}
 
-    obj.triangles = triangles;
-    objObjects.insert({ objName, obj });
-}
-/*
-// returns triangles from specific obj based on obj name
-const std::vector<Triangle>& ObjectManager::getTriangles(const std::string& objFilename) const {
-    return objTriangles.at(objFilename);
-} */
-/*
-// set triangles from specific obj based on obj name
-void ObjectManager::setTriangles(const std::string& objFilename, const std::vector<Triangle>& triangles) {
-    objTriangles[objFilename] = triangles; 
-}
 
 // multiplies all triangles from specific obj with a matrix
 void ObjectManager::transformTriangles(const std::string& objFilename, const glm::mat4& matrix) {
-    std::vector<Triangle>& triangles = objTriangles[objFilename];
-    for (Triangle& t : triangles) {
-        t.pointOne = matrix * t.pointOne;
-        t.pointTwo = matrix * t.pointTwo;
-        t.pointThree = matrix * t.pointThree;
+
+    // std::vector<Triangle>& triangles = objObjects[objFilename].triangles;
+    // std::cout << "Transforming triangles for object: " << objFilename << std::endl;
+    // std::cout << "Triangles: " << objObjects.at(objFilename).triangleStartIndex << " to " << objObjects.at(objFilename).triangleEndIndex << std::endl;
+    for (int i = objObjects.at(objFilename).triangleStartIndex; i < objObjects.at(objFilename).triangleEndIndex; ++i) {
+        triangles.at(i).pointOne = matrix * triangles.at(i).pointOne;
+        triangles.at(i).pointTwo = matrix * triangles.at(i).pointTwo;
+        triangles.at(i).pointThree = matrix * triangles.at(i).pointThree;
     }
 } 
-
+/*
 // check first Triangle point for which coordinate is bigger
 bool compareXPointsOfTriangle(const Triangle& a, const Triangle& b) {
     return a.pointOne.x < b.pointOne.x;
@@ -320,12 +318,4 @@ void  ObjectManager::createBoundingHierarchy(const std::string& objFilename) {
     splitTrianglesForBox(root);
     boundingVolumeHierarchy[objFilename] = root;
 }
-
-// set Color for Object
-void ObjectManager::setColor(const std::string& objFilename, const glm::vec3& color) {
-    objColors[objFilename] = color; 
-} 
-// return Color from Object
-glm::vec3 ObjectManager::getColor(const std::string& objFilename) const {
-    return objColors.at(objFilename); 
-}*/
+*/

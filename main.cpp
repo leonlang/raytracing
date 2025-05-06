@@ -25,7 +25,7 @@ using namespace cimg_library;
 // and CImg: https://cimg.eu/ are used.
 
 
-/*
+
 struct ImageData { std::vector<glm::vec2> imagePoints; std::vector<glm::vec3> imageColors; };
 
 // Normal Interpolation
@@ -316,7 +316,7 @@ std::vector<Triangle> boundingBoxIntersection(Node* node, const Ray& ray) {
 		return leftTriangles;
 	}
 }
-
+/*
 // Shadow Intersection
 // Sends out Ray from intersection to light source. If object is in between, there is shadow
 bool shadowIntersection(ObjectManager* objManager, const std::string& currentObjFilename, const glm::vec3& lightPos, const float& fDistance, const Ray& ray) {
@@ -401,28 +401,27 @@ glm::vec3 softShadow(int lightAmount,ObjectManager* objManager, const std::strin
 
 	return color;
 }
-
+*/
 // Ray Intersection with Boxes and Triangles
 // Combines the Methods for Slab Test, Bounding Box Volume Hierarchy and Triangle Intersection
-std::pair<glm::vec2, glm::vec3> rayIntersection(const Ray& ray, ObjectManager* objManager, const int& pointX,const int& pointY, const glm::vec3& lightPos) {
+std::pair<glm::vec2, glm::vec3> rayIntersection(const Ray& ray, ObjectManager& objManager, const int& pointX,const int& pointY, const glm::vec3& lightPos) {
 
 	glm::vec3 colorPoint(0, 0, 0);
 	float distanceComparison = INFINITY;
-	for (const auto& pair : objManager->objTriangles) {
-		const std::string& objFilename = pair.first;
+	// for (const auto& pair : objManager->objTriangles) {
+		// const std::string& objFilename = pair.first;
 		// std::cout << objFilename << pair.second.size();
-
-		const std::vector<Triangle>& trianglesBox = pair.second;
-		*/
-		/*
+		const std::vector<Triangle>& trianglesBox = objManager.triangles;
+		// const std::vector<Triangle>& trianglesBox = pair.second;
+		
+		
 		// Old Intersection for Speed Testing Purposes with OneBox and goes through all Triangles in an object
-		if (intersectRayAabb(ray.direction, objManager->minBox[objFilename], objManager->maxBox[objFilename])) {
-			const std::vector<Triangle>& trianglesBox = pair.second;
-			for (int k = 0; k < trianglesBox.size(); k++) {
-		*/	
+		
+		for (int k = 0; k < trianglesBox.size(); k++) {
+		
 		// std::cout << objFilename << std::endl;
 		// const std::vector<Triangle>& trianglesBox = boundingBoxIntersection(objManager->boundingVolumeHierarchy[objFilename], ray);
-/*
+
 		for (int k = 0; k < trianglesBox.size(); k++) {
 
 			float fDistance = rayTriangleIntersection(&ray, &trianglesBox[k]);
@@ -436,24 +435,23 @@ std::pair<glm::vec2, glm::vec3> rayIntersection(const Ray& ray, ObjectManager* o
 
 					// Code for many light Sources
 
-					glm::vec3 objColor(1,0,0);
+					/*glm::vec3 objColor(1,0,0);
 					if (trianglesBox[k].textureName.empty()) {
 						objColor = objManager->objColors[objFilename];
 					}
 					else {
 						objColor = trianglesBox[k].color;
-					}
+					} */
 					// 36 Shadows are a good value
-					glm::vec3 color = softShadow(1,objManager,objFilename, &trianglesBox[k], &ray,lightPos,lightColor, objColor,fDistance);
+					glm::vec3 color(0.5f,0.1f,0.1f);  // = softShadow(1,objManager,objFilename, &trianglesBox[k], &ray,lightPos,lightColor, objColor,fDistance);
 					// Convert 0...1 color values to 1...255 color Values
 					colorPoint.x = int((color.x * 255));
 					colorPoint.y = int((color.y * 255));
 					colorPoint.z = int((color.z * 255));
-					// }
+					}
 				}
 			}
-		}
-	}
+	} 
 	glm::vec2 imagePoint(pointX, pointY);
 	return { imagePoint, colorPoint };
 }
@@ -504,7 +502,8 @@ void drawImage(const glm::vec2& imgSize, const std::vector<glm::vec2>& imagePoin
 // Sending out Rays
 // Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
 // Sends out Rays and returns the corresponding color for each pixel
-ImageData sendRaysAndIntersectPointsColors(const glm::vec2& imageSize, const glm::vec4& lightPos, ObjectManager* objManager) {
+
+ImageData sendRaysAndIntersectPointsColors(const glm::vec2& imageSize, const glm::vec4& lightPos, ObjectManager& objManager) {
 	Ray ray(glm::vec3(0.0f, 0.0f, 400.0f));
 	glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
 	ImageData imageData;
@@ -517,6 +516,7 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2& imageSize, const glm
 			ray.direction.y = j + rayXY.y;
 
 			std::pair<glm::vec2, glm::vec3> points = rayIntersection(ray, objManager, i + imageSize.x / 2, j + imageSize.y / 2, lightPos);
+			// std::pair<glm::vec2, glm::vec3> points = {glm::vec2(ray.direction.x, ray.direction.y), glm::vec3(240.0f, 1.0f, 1.0f)};
 			if (points.second != glm::vec3(0, 0, 0)) {
 				imageData.imagePoints.push_back(points.first);
 				imageData.imageColors.push_back(points.second);
@@ -526,8 +526,6 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2& imageSize, const glm
 	return imageData;
 }
 
-
-*/
 
 int main()
 {
@@ -551,9 +549,10 @@ int main()
 		glm::mat4 viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, 0.f, circleZ), glm::vec3(glm::radians(0.f), glm::radians(angleDegree + 90), glm::radians(0.f)));
 
 		// Load Cube Triangles and scale it
-		objManager.loadObjFile("cube1","./obj/cube.obj");
+		objManager.loadObjFile("cube","./obj/cube.obj");
+
 		// objManager.loadObjFile("cat2","./obj/chair/chair.obj");
-		objManager.loadObjFile("cat2","./obj/cat/cat.obj");
+		// objManager.loadObjFile("cat2","./obj/cat/cat.obj");
 
 		// objManager.objObjects.insert({"cat3",objManager.objObjects["cat2"]}); 
 		// objManager.loadObjFile("cat5","./obj/cat/cat.obj");
@@ -572,20 +571,17 @@ int main()
 
 				
 		for (const auto& [name, obj] : objManager.objObjects) {
-			std::cout << "Filename: " << name << ")\n";
+			std::cout << "Filename: " << name << "\n";
 		}
 		
-		/*
-		objManager.setColor("./obj/cube.obj", glm::vec3(1.f, 1.f, 0.f));
-		objManager.transformTriangles("./obj/cube.obj", Transformation::scaleObj(10.0f, 10.0f, 10.0f));
-
-		// transform position of original cube
-		objManager.transformTriangles("./obj/cube.obj", Transformation::changeObjPosition(glm::vec3(0.f, 15.f, -15.f)));
 		
+		objManager.transformTriangles("cube", Transformation::scaleObj(10.0f, 10.0f, 10.0f));
+		// transform position of original cube
+		objManager.transformTriangles("cube", Transformation::changeObjPosition(glm::vec3(0.f, 15.f, -15.f)));
 		// Bring Obj Models into ViewPosition
-		objManager.transformTriangles("./obj/cube.obj", glm::inverse(viewMatrix));
+		objManager.transformTriangles("cube", glm::inverse(viewMatrix));
 
-
+		
 		// Draw Image
 		glm::vec2 imageSize(600, 400);
 		//glm::vec4 lightPos(-200.0f, -300.0f, -1000.4f, 1.0f);
@@ -598,16 +594,20 @@ int main()
 		// Start the timer 
 		auto start = std::chrono::high_resolution_clock::now();
 
-		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, &objManager);
-
-
+		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager);
+		// std::cout << "Image Points size: " << points.imagePoints.size() << std::endl;
+		/* for (const auto& point : points.imagePoints) {
+			std::cout << "(" << point.x << ", " << point.y << ")\n";
+		}
+		std::cout << "\nImage Colors:\n";
+		for (const auto& color : points.imageColors) {
+			std::cout << "(" << color.r << ", " << color.g << ", " << color.b << ")\n";
+		}*/
 		// End the timer 
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsed = end - start;
 		// Print the time taken 
 		std::cout << "Time taken for Intersection: " << elapsed.count() << " seconds " << std::endl;
-
 		drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
-		*/
 	}
 }

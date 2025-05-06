@@ -63,38 +63,34 @@ struct Node {
 
 class ObjObject {
 public:
-    std::vector<Triangle> triangles;
+    // std::vector<Triangle> triangles;
+    int triangleStartIndex;
+    int triangleEndIndex;
     glm::vec3 minBox;
     glm::vec3 maxBox;
     // ambientStrength, specularStrength and shininess
-    glm::vec3 objProperties;
+    // glm::vec3 objProperties;
     // loaded textures
-    std::unordered_map<std::string, unsigned char*> textureData;
-    std::unordered_map<std::string, glm::ivec2> textureDimensions;
+
 
 };
 class ObjectManager {
 public:
+    std::vector<Triangle> triangles;
+    std::unordered_map<std::string, unsigned char*> textureData;
+    std::unordered_map<std::string, glm::ivec2> textureDimensions;
+
     std::unordered_map<std::string, ObjObject> objObjects;
     // std::vector<ObjObject> objObjects;
 
     // Method to load triangles from an OBJ file
     void loadObjFile(const std::string& objName,const std::string& objFilename);
 
-    // Method to get triangles for a specific OBJ file
-    const std::vector<Triangle>& getTriangles(const std::string& objFilename) const;
-
-    // Method to set triangles for a specific OBJ file 
-    void setTriangles(const std::string& objFilename, const std::vector<Triangle>& triangles);
 
     // Method to transform triangles for a specific OBJ file 
     void transformTriangles(const std::string& objFilename, const glm::mat4& matrix);
     void splitTrianglesForBox(Node* root);
     void createBoundingHierarchy(const std::string& objFilename);
-    // Method to set color for a specific OBJ file 
-    void setColor(const std::string& objFilename, const glm::vec3& color);
-    // Method to get color for a specific OBJ file 
-    glm::vec3 getColor(const std::string& objFilename) const;
 };
 
 #endif // OBJECT_H
