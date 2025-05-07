@@ -5,15 +5,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#define cimg_display 0
-#include "CImg.h"
 #include <chrono>
-#include "Transformation.h"
-#include "Object.h"
-#include <optional>
+#include "code/Transformation.h"
+#include "code/Object.h"
+#include "code/Scene.h"
+#include "code/Graphics.h"
 
 
-using namespace cimg_library;
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #define TINYOBJLOADER_USE_MAPBOX_EARCUT
 #include "tiny_obj_loader.h"
@@ -27,7 +25,6 @@ using namespace cimg_library;
 
 
 
-struct ImageData { std::vector<glm::vec2> imagePoints; std::vector<glm::vec3> imageColors; };
 
 // Normal Interpolation
 // Concept for the Algorithm: https://www.khronos.org/opengl/wiki/Calculating_a_Surface_Normal
@@ -140,206 +137,23 @@ glm::vec3 interpolateNormal(const Triangle& triangle, const glm::vec3& barycentr
 	);
 }
 
-// Lighting with Phong Illumination Model
-// Concept is found here: https://cg.informatik.uni-freiburg.de/course_notes/graphics_02_shading.pdf
-glm::vec3 phongIllumination(const Triangle& triangle, const Ray& ray, const glm::vec3& lightPos, const glm::vec3& objectColor, const float& distance) {
-	// Phong illumination model
-	// objectColor = object color
-	// lightColor = Light Color
-	// shininess = specular radius
-	// specularStrength = specular Strength
-	const glm::vec3 lightColor(1.0f, 1.0f, 1.0f); // White light
-
-	const float ambientStrength = 0.1f;
-	const float specularStrength = 0.5f;
-	const float shininess = 32.0f;
-	// rView is a constant factor for the reflection model, representing the light reflected to the view position
-	// smaller number = less light reflected to view position = diffuse plays a smaller role
-	constexpr float rView = 1.0f / glm::pi<float>();
-
-	// Calculate the intersection point of the ray with the triangle
-	glm::vec3 intersectionPoint = ray.origin + distance * ray.direction;
-
-	// Calculate barycentric coordinates for the intersection point within the triangle
-	glm::vec3 barycentricCoords = calculateBarycentricCoords(triangle, intersectionPoint);
-
-	// Interpolate the normal at the intersection point using barycentric coordinates
-	// glm::vec3 n = interpolateNormal(*triangle, barycentricCoords); // normal
-	// test with normal
-	glm::vec3 n = calculateTriangleNormal(triangle);
-	// Calculate the direction vector from the intersection point to the light source
-	glm::vec3 l = glm::normalize(lightPos - intersectionPoint); // lightDirection
-
-	// Calculate Diffuse Reflection
-	// Diffuse reflection is based on Lambert's cosine law, which states that the intensity of light is proportional to the 
-	// cosine of the angle between the light direction and the surface normal
-	// Means: intensity of light is is higher if the angle is sharper
-	// The dot product n * l represents this cosine value, and I use max to ensure it is non-negative
-	// objectColor * lightColor represents the final color of object with light 
-	float dotProduct = glm::dot(n, l);
-	if (dotProduct < 0.0f) {
-		dotProduct = -dotProduct;
-	}
-	glm::vec3 diffuse = rView * objectColor * lightColor * glm::max(dotProduct, 0.00f);
-
-	// Calculate Ambient Reflection
-	// Ambient reflection represents the constant illumination of the object by the environment
-	// It is usually a small constant value added to ensure that objects are visible even when not directly lit
-	// Higher AmbientStrenght = All of the Object brightens up more by the same amount
-	glm::vec3 ambient = (1 / glm::pi<float>()) * ambientStrength * objectColor * lightColor;
-
-	// Calculate Specular Reflection
-	// Specular reflection represents the mirror-like reflection of light sources on shiny surfaces
-	// It does not use the object color (objectColor) because specular highlights are typically the color of the light source
-	// Higher shininess means a smaller specular highlight
-	glm::vec3 v = glm::normalize(-ray.direction); // View Direction
-	glm::vec3 r = glm::reflect(-l, n); // Reflect Direction
-
-	// The specular term is calculated using the Phong reflection model
-	// It is based on the dot product between the view direction and the reflection direction, raised to the power of the shininess factor (shininess)
-	// specularStrength = specular strength. Smaller specular strength means less intensity
-	glm::vec3 specular = lightColor * specularStrength * glm::max(dotProduct, 0.00f) * glm::pow(glm::max(glm::dot(r, v), 0.0f), shininess);
-
-	// Combine the three components (diffuse, specular, and ambient) to get the final color
-	return diffuse + specular + ambient;
-}
-
-// Slab Test
-// Concept: https://cg.informatik.uni-freiburg.de/course_notes/graphics_01_raycasting.pdf
-bool intersectRayAabb(const glm::vec3& direction, const glm::vec3& minBox, const glm::vec3& maxBox) {
-	// Calculate the t values for each pair of planes
-
-	// origin is always at 0 because we are at view Space so we don't need to include it in 
-	// the calculations
-
-	// x-slab intersection t
-	float minXT = minBox.x / direction.x;
-	float maxXT = maxBox.x / direction.x;
-	if (minXT > maxXT) {
-		std::swap(minXT, maxXT);
-	}
-
-	float minYT = minBox.y / direction.y;
-	float maxYT = maxBox.y / direction.y;
-	if (minYT > maxYT) {
-		std::swap(minYT, maxYT);
-	}
-
-	// Check if the intervals overlap
-	if (maxXT < minYT || maxYT < minXT) {
-		return false;
-	}
-
-	// Now do it for z axis
-	if (minYT > minXT) {
-		minXT = minYT;
-	}
-	if (maxYT < maxXT) {
-		maxXT = maxYT;
-	}
-
-	float minZT = minBox.z / direction.z;
-	float maxZT = maxBox.z / direction.z;
-
-	if (minZT > maxZT) {
-		std::swap(minZT, maxZT);
-	}
-
-	if ((minXT > maxZT) || (minZT > maxXT)) {
-		return false;
-	}
-
-	return true;
-}
-
-// Slab Test with Ray not at Origin. Needed for Shadow Intersection
-// Concept: https://cg.informatik.uni-freiburg.de/course_notes/graphics_01_raycasting.pdf
-bool intersectRayAabbNoOrigin(const Ray& ray, const glm::vec3& minBox, const glm::vec3& maxBox) {
-	// Calculate the t values for each pair of planes
-
-	// x-slab intersection t
-	float minXT = (minBox.x - ray.origin.x) / ray.direction.x;
-	float maxXT = (maxBox.x - ray.origin.x) / ray.direction.x;
-	if (minXT > maxXT) {
-		std::swap(minXT, maxXT);
-	}
-
-	float minYT = (minBox.y - ray.origin.y) / ray.direction.y;
-	float maxYT = (maxBox.y - ray.origin.y) / ray.direction.y;
-	if (minYT > maxYT) {
-		std::swap(minYT, maxYT);
-	}
-
-	// Check if the intervals overlap
-	if (maxXT < minYT || maxYT < minXT) {
-		return false;
-	}
-
-	// Now do it for z axis
-	if (minYT > minXT) {
-		minXT = minYT;
-	}
-	if (maxYT < maxXT) {
-		maxXT = maxYT;
-	}
-
-	float minZT = (minBox.z - ray.origin.z) / ray.direction.z;
-	float maxZT = (maxBox.z - ray.origin.z) / ray.direction.z;
-
-	if (minZT > maxZT) {
-		std::swap(minZT, maxZT);
-	}
-
-	if ((minXT > maxZT) || (minZT > maxXT)) {
-		return false;
-	}
-
-	return true;
-}
-// Bounding Box Volume Hierarchy
-// Boxes get traversed as a binary tree and intersected at each level
-std::vector<Triangle> boundingBoxIntersection(Node* node, const Ray& ray) {
-	// Only Collect Triangles if Ray and Box have intersection
-	if (!intersectRayAabbNoOrigin(ray, node->minBox, node->maxBox)) {
-		return {};
-	}
-
-	// If leaf node, just return its triangles.
-	else if (!node->left && !node->right) {
-		return node->triangles;
-	}
-	else {
-		// Otherwise, collect all triangles from left and right.
-		std::vector<Triangle> leftTriangles = boundingBoxIntersection(node->left, ray);
-		std::vector<Triangle> rightTriangles = boundingBoxIntersection(node->right, ray);
-
-		// Merge them.
-		leftTriangles.insert(leftTriangles.end(),
-			rightTriangles.begin(),
-			rightTriangles.end());
-		return leftTriangles;
-	}
-}
 
 // Shadow Intersection
 // Sends out Ray from intersection to light source. If object is in between, there is shadow
 bool shadowIntersection(ObjectManager& objManager, const glm::vec3& lightPos, const float& fDistance, const Ray& ray) {
-		const std::vector<Triangle>& triangles = objManager.triangles;
-		// const std::vector<Triangle>& trianglesBox = pairShadow.second;
-		Ray shadowRay(lightPos - ray.direction * fDistance);
-		shadowRay.origin = ray.direction * fDistance;
-		// shadowRay.origin += ray.direction * 0.001f; // add small value to prevent shadowAcne
-		// const std::vector<Triangle>& trianglesBox = boundingBoxIntersection(objManager->boundingVolumeHierarchy[shadowObjFilename], shadowRay);
-		// const std::vector<Triangle>& trianglesBox = objManager->objTriangles[shadowObjFilename];
-			// Prevents intersection between same object
-			// if (shadowObjFilename != currentObjFilename) {
-				for (int j = 0; j < triangles.size(); j++) {
-					float shadowDistance = rayTriangleIntersection(shadowRay, triangles[j]);
-					if (shadowDistance != -INFINITY) {
-						return true;
-				}
-			// }
-		// }
+	const std::vector<Triangle>& triangles = objManager.triangles;
+	// const std::vector<Triangle>& trianglesBox = pairShadow.second;
+	Ray shadowRay(lightPos - ray.direction * fDistance);
+	shadowRay.origin = ray.direction * fDistance;
+	// shadowRay.origin += ray.direction * 0.001f; // add small value to prevent shadowAcne
+		// Prevents intersection between same object
+		// if (shadowObjFilename != currentObjFilename) {
+	for (int j = 0; j < triangles.size(); j++) {
+		float shadowDistance = rayTriangleIntersection(shadowRay, triangles[j]);
+		if (shadowDistance != -INFINITY) {
+			return true;
+		}
+
 	}
 	return false;
 }
@@ -350,7 +164,6 @@ bool shadowIntersection(ObjectManager& objManager, const glm::vec3& lightPos, co
 // Concept: https://64.github.io/tonemapping/
 glm::vec3 softShadow(int& lightAmount,ObjectManager& objManager,const Triangle& triangle, const Ray& ray, const glm::vec3& lightPos, const float& distance) {
 	glm::vec3 objColor(1, 1, 0);
-	glm::vec3 testColor = objColor;
 	if (!triangle.textureName.empty()) {
 		glm::vec3 intersectionPoint = ray.origin + distance * ray.direction;
 		glm::vec2 interpolatedTexCoordinate = getTextureCoordinate(calculateBarycentricCoords(triangle, intersectionPoint), triangle.colorOneCoordinate, triangle.colorTwoCoordinate, triangle.colorThreeCoordinate);
@@ -359,17 +172,17 @@ glm::vec3 softShadow(int& lightAmount,ObjectManager& objManager,const Triangle& 
 		glm::ivec2 texDim = objManager.textureDimensions[triangle.textureName];
 
 		size_t texIndex = (static_cast<int>(interpolatedTexCoordinate.y) *texDim.x + static_cast<int>(interpolatedTexCoordinate.x)) * 3;
-		testColor.x = texData[texIndex + 0] / 255.0f;
-		testColor.y = texData[texIndex + 1] / 255.0f;
-		testColor.z = texData[texIndex + 2] / 255.0f;
+		objColor.x = texData[texIndex + 0] / 255.0f;
+		objColor.y = texData[texIndex + 1] / 255.0f;
+		objColor.z = texData[texIndex + 2] / 255.0f;
 	}
 	glm::vec3 color(0.0f,0.0f,0.0f);
 	glm::vec3 lightPosChanged = lightPos;
 	// Generate the lightPos based on the last lightPos and change always one coordinate
-	
+	/*
 	for (int i = 0; i < lightAmount; i++) {
 		bool isShadow = shadowIntersection(objManager, lightPosChanged, distance, ray);
-		glm::vec3 colorPhong = phongIllumination(triangle, ray, lightPosChanged, testColor, distance);
+		glm::vec3 colorPhong = phongIllumination(triangle, ray, lightPosChanged, objColor, distance);
 		// glm::vec3 colorPhong (240.f,1.f,1.f);
 		if (isShadow) { colorPhong /= 5; };
 		color += colorPhong;
@@ -386,9 +199,9 @@ glm::vec3 softShadow(int& lightAmount,ObjectManager& objManager,const Triangle& 
 			break;
 		}
 	}
-	
+	*/
 	// Disable Shadows for testing purposes
-	// color = phongIllumination(triangle, ray, lightPosChanged, lightColor, testColor, objManager->objProperties[objFilename][0], objManager->objProperties[objFilename][1], objManager->objProperties[objFilename][2], distance);
+	color = Graphics::phongIllumination(objManager,triangle, ray, lightPosChanged, distance);
 
 
 	// Reinhardt Tone Mapping 
@@ -418,10 +231,9 @@ std::pair<glm::vec2, glm::vec3> rayIntersection(const Ray& ray, ObjectManager& o
 		if (fDistance != -INFINITY && fDistance < distanceComparison) {
 			distanceComparison = fDistance;
 
-
-
 			int lightAmount = 1;
-			glm::vec3 color = softShadow(lightAmount,objManager, objManager.triangles.at(k), ray,lightPos,fDistance);
+			glm::vec3 color = Graphics::phongIllumination(objManager,objManager.triangles.at(k), ray, lightPos, fDistance);
+			// glm::vec3 color = softShadow(lightAmount,objManager, objManager.triangles.at(k), ray,lightPos,fDistance);
 			// Convert 0...1 color values to 1...255 color Values
 			colorPoint.x = int((color.x * 255));
 			colorPoint.y = int((color.y * 255));
@@ -457,75 +269,6 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2& imageSize, const glm
 	return imageData;
 }
 
-
-// img is stored inside folder images/generation or it can be displayed directly
-// Uses Library CImg: https://cimg.eu/
-void drawImage(const glm::vec2& imgSize, const std::vector<glm::vec2>& imagePoints, const std::vector<glm::vec3>& imageColors, const int& angleDegree,const bool& saveImage, const bool& displayImage) {
-	// create image
-	CImg<unsigned char> img(imgSize.x, imgSize.y, 1, 3);
-	img.fill(0);
-
-
-	// draw pixels found in ray intersection
-	for (int i = 0; i < imagePoints.size(); i++) {
-		unsigned char color[] = { 0,0,0 };
-		color[0] = imageColors[i].x;
-		color[1] = imageColors[i].y;
-		color[2] = imageColors[i].z;
-		img.draw_point(imagePoints[i].x, imagePoints[i].y, color);
-	}
-
-	unsigned char lightBlue[] = { 173, 216, 230 }; // RGB values for light blue
-
-	// Iterate through all the pixels
-	cimg_forXY(img, x, y) {
-		// Check if the pixel is black (all channels are 0)
-		if (img(x, y, 0, 0) == 0 && img(x, y, 0, 1) == 0 && img(x, y, 0, 2) == 0) {
-			// Change the pixel to light blue
-			img(x, y, 0, 0) = lightBlue[0]; // Red channel
-			img(x, y, 0, 1) = lightBlue[1]; // Green channel
-			img(x, y, 0, 2) = lightBlue[2]; // Blue channel
-		}
-	}
-	std::string imgName = "images/generation/output";
-	imgName += std::to_string(static_cast<int>(angleDegree));
-	imgName += ".bmp";
-
-	if (saveImage == true) {
-		img.save_bmp(imgName.c_str()); // Use c_str() to get a const char* from std::string
-	}
-	if (displayImage == true) {
-		img.display("Simple Raytracer by Leon Lang");
-	}
-}
-
-
-void szene1(ObjectManager& objManager, glm::mat4& viewMatrix, const float& angleDegree, glm::vec2& imageSize, glm::vec4& lightPos) {
-
-	float radius = 100.0f; // Radius of the circle on which the camera moves
-	float radians = glm::radians(angleDegree); // Convert angle from degrees to radians
-	float circleX = radius * std::cos(radians); // Calculate x coordinate on the circle
-	float circleZ = radius * std::sin(radians); // Calculate z coordinate on the circle
-	viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, 0.f, circleZ), glm::vec3(glm::radians(0.f), glm::radians(angleDegree + 90), glm::radians(0.f)));
-	
-	imageSize = glm::vec2(600, 400); // Image Size
-	lightPos = glm::vec4(500.0f, -300.0f, -200.f, 1.0f); // Light Position
-	// Load Cube Triangles and scale it
-	objManager.loadObjFile("cube","./obj/cube.obj");
-
-	// objManager.loadObjFile("cat2","./obj/chair/chair.obj");
-	// objManager.loadObjFile("cat2","./obj/cat/cat.obj");
-
-	// objManager.objObjects.insert({"cat3",objManager.objObjects["cat2"]}); 
-	// objManager.loadObjFile("cat5","./obj/cat/cat.obj");
-
-	objManager.transformTriangles("cube", Transformation::scaleObj(10.0f, 10.0f, 10.0f));
-	// transform position of original cube
-	objManager.transformTriangles("cube", Transformation::changeObjPosition(glm::vec3(0.f, 15.f, -15.f)));
-	// Bring Obj Models into ViewPosition
-
-}
-
 int main()
 {
 
@@ -542,8 +285,8 @@ int main()
 		glm::vec4 lightPos;
 
 		// Choose Szene
-		szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
-
+		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
+		Scene::scene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
 		lightPos = glm::inverse(viewMatrix) * lightPos;
@@ -567,6 +310,7 @@ int main()
 		std::cout << "Time taken for Intersection: " << elapsed.count() << " seconds " << std::endl;
 
 		// Draw Image based on found Points
-		drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
+		// drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
+		Graphics::drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
 	}
 }
