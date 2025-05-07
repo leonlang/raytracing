@@ -28,9 +28,11 @@
 // Combines the Methods for Data Hierarchies Triangle Intersection and Shadows
 glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates)
 {
-
 	glm::vec3 colorPoint(0, 0, 0);
 	float distanceComparison = INFINITY;
+	// Add data hierarchies here. They should result a vector
+	// which contains the indexes of the triangles which are left
+	// The for looop goes through those triangles
 	for (int k = 0; k < objManager.triangles.size(); k++)
 	{
 
@@ -47,6 +49,9 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, const glm
 			for (const glm::vec3 &point : randomCoordinates)
 			{
 				glm::vec3 lightPosChanged = lightPos + point;
+				// Add data hierarchies here. They should result a vector
+				// which contains the indexes of the triangles which are left
+				// The for looop goes through those triangles
 				if (Intersection::shadowIntersection(objManager, lightPosChanged, fDistance, ray))
 				{
 					shadowAmount++;
