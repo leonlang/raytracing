@@ -142,12 +142,14 @@ glm::vec3 interpolateNormal(const Triangle& triangle, const glm::vec3& barycentr
 
 // Lighting with Phong Illumination Model
 // Concept is found here: https://cg.informatik.uni-freiburg.de/course_notes/graphics_02_shading.pdf
-glm::vec3 phongIllumination(const Triangle& triangle, const Ray& ray, const glm::vec3& lightPos, const glm::vec3& lightColor, const glm::vec3& objectColor, const float& distance) {
+glm::vec3 phongIllumination(const Triangle& triangle, const Ray& ray, const glm::vec3& lightPos, const glm::vec3& objectColor, const float& distance) {
 	// Phong illumination model
 	// objectColor = object color
 	// lightColor = Light Color
 	// shininess = specular radius
 	// specularStrength = specular Strength
+	const glm::vec3 lightColor(1.0f, 1.0f, 1.0f); // White light
+
 	const float ambientStrength = 0.1f;
 	const float specularStrength = 0.5f;
 	const float shininess = 32.0f;
@@ -346,7 +348,8 @@ bool shadowIntersection(ObjectManager& objManager, const glm::vec3& lightPos, co
 // Generate multiple light Sources in near distance to each other
 // Tone Mapping
 // Concept: https://64.github.io/tonemapping/
-glm::vec3 softShadow(int& lightAmount,ObjectManager& objManager,const Triangle& triangle, const Ray& ray, const glm::vec3& lightPos, const glm::vec3& lightColor, const glm::vec3& objColor, const float& distance) {
+glm::vec3 softShadow(int& lightAmount,ObjectManager& objManager,const Triangle& triangle, const Ray& ray, const glm::vec3& lightPos, const float& distance) {
+	glm::vec3 objColor(1, 1, 0);
 	glm::vec3 testColor = objColor;
 	if (!triangle.textureName.empty()) {
 		glm::vec3 intersectionPoint = ray.origin + distance * ray.direction;
@@ -366,7 +369,7 @@ glm::vec3 softShadow(int& lightAmount,ObjectManager& objManager,const Triangle& 
 	
 	for (int i = 0; i < lightAmount; i++) {
 		bool isShadow = shadowIntersection(objManager, lightPosChanged, distance, ray);
-		glm::vec3 colorPhong = phongIllumination(triangle, ray, lightPosChanged, lightColor, testColor, distance);
+		glm::vec3 colorPhong = phongIllumination(triangle, ray, lightPosChanged, testColor, distance);
 		// glm::vec3 colorPhong (240.f,1.f,1.f);
 		if (isShadow) { colorPhong /= 5; };
 		color += colorPhong;
@@ -408,56 +411,52 @@ std::pair<glm::vec2, glm::vec3> rayIntersection(const Ray& ray, ObjectManager& o
 
 	glm::vec3 colorPoint(0, 0, 0);
 	float distanceComparison = INFINITY;
-	// for (const auto& pair : objManager->objTriangles) {
-		// const std::string& objFilename = pair.first;
-		// std::cout << objFilename << pair.second.size();
-		std::vector<Triangle>& trianglesBox = objManager.triangles;
-		// const std::vector<Triangle>& trianglesBox = pair.second;
+	for (int k = 0; k < objManager.triangles.size(); k++) {
+
+		float fDistance = rayTriangleIntersection(ray, objManager.triangles.at(k));
 		
-		
-		// Old Intersection for Speed Testing Purposes with OneBox and goes through all Triangles in an object
-		
-		for (int k = 0; k < trianglesBox.size(); k++) {
-		
-		// std::cout << objFilename << std::endl;
-		// const std::vector<Triangle>& trianglesBox = boundingBoxIntersection(objManager->boundingVolumeHierarchy[objFilename], ray);
+		if (fDistance != -INFINITY && fDistance < distanceComparison) {
+			distanceComparison = fDistance;
 
-		for (int k = 0; k < trianglesBox.size(); k++) {
 
-			float fDistance = rayTriangleIntersection(ray, trianglesBox[k]);
-			
-			if (fDistance != -INFINITY) {
-				if (fDistance < distanceComparison) {
 
-					distanceComparison = fDistance;
-
-					glm::vec3 lightColor(1.0f, 1.0f, 1.0f); // White light
-
-					// Code for many light Sources
-
-					/*glm::vec3 objColor(1,0,0);
-					if (trianglesBox[k].textureName.empty()) {
-						objColor = objManager->objColors[objFilename];
-					}
-					else {
-						objColor = trianglesBox[k].color;
-					} */
-					// 36 Shadows are a good value
-					// glm::vec3 color(0.5f,0.1f,0.1f);  // 
-					glm::vec3 objColor(1, 1, 0);
-					int lightAmount = 1;
-					glm::vec3 color = softShadow(lightAmount,objManager, trianglesBox[k], ray,lightPos,lightColor, objColor,fDistance);
-					// Convert 0...1 color values to 1...255 color Values
-					colorPoint.x = int((color.x * 255));
-					colorPoint.y = int((color.y * 255));
-					colorPoint.z = int((color.z * 255));
-					}
-				}
-			}
+			int lightAmount = 1;
+			glm::vec3 color = softShadow(lightAmount,objManager, objManager.triangles.at(k), ray,lightPos,fDistance);
+			// Convert 0...1 color values to 1...255 color Values
+			colorPoint.x = int((color.x * 255));
+			colorPoint.y = int((color.y * 255));
+			colorPoint.z = int((color.z * 255));
+		}
 	} 
 	glm::vec2 imagePoint(pointX, pointY);
 	return { imagePoint, colorPoint };
 }
+
+
+// Sending out Rays
+// Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
+// Sends out Rays and returns the corresponding color for each pixel
+
+ImageData sendRaysAndIntersectPointsColors(const glm::vec2& imageSize, const glm::vec4& lightPos, ObjectManager& objManager) {
+	Ray ray(glm::vec3(0.0f, 0.0f, 400.0f));
+	glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
+	ImageData imageData;
+
+	for (int i = 0; i < imageSize.x; ++i) {
+		for (int j = 0; j < imageSize.y; ++j) {
+			ray.direction.x = i + rayXY.x - imageSize.x / 2;
+			ray.direction.y = j + rayXY.y - imageSize.y / 2;
+
+			std::pair<glm::vec2, glm::vec3> points = rayIntersection(ray, objManager, i, j, lightPos);
+			if (points.second != glm::vec3(0, 0, 0)) {
+				imageData.imagePoints.push_back(points.first);
+				imageData.imageColors.push_back(points.second);
+			}
+		}	
+	}
+	return imageData;
+}
+
 
 // img is stored inside folder images/generation or it can be displayed directly
 // Uses Library CImg: https://cimg.eu/
@@ -500,34 +499,6 @@ void drawImage(const glm::vec2& imgSize, const std::vector<glm::vec2>& imagePoin
 	}
 }
 
-
-
-// Sending out Rays
-// Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
-// Sends out Rays and returns the corresponding color for each pixel
-
-ImageData sendRaysAndIntersectPointsColors(const glm::vec2& imageSize, const glm::vec4& lightPos, ObjectManager& objManager) {
-	Ray ray(glm::vec3(0.0f, 0.0f, 400.0f));
-	glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
-	ImageData imageData;
-
-	// std::cout << "Intersection: " << intersectRayAabb(glm::vec2(0, 0), glm::vec2(6, 3), glm::vec2(300, 300), glm::vec2(400, 400)) << " Intersects";
-	for (int i = -imageSize.x / 2; i < imageSize.x / 2; ++i) {
-
-		for (int j = -imageSize.y / 2; j < imageSize.y / 2; ++j) {
-			ray.direction.x = i + rayXY.x;
-			ray.direction.y = j + rayXY.y;
-
-			std::pair<glm::vec2, glm::vec3> points = rayIntersection(ray, objManager, i + imageSize.x / 2, j + imageSize.y / 2, lightPos);
-			// std::pair<glm::vec2, glm::vec3> points = {glm::vec2(ray.direction.x, ray.direction.y), glm::vec3(240.0f, 1.0f, 1.0f)};
-			if (points.second != glm::vec3(0, 0, 0)) {
-				imageData.imagePoints.push_back(points.first);
-				imageData.imageColors.push_back(points.second);
-			}
-		}	
-	}
-	return imageData;
-}
 
 void szene1(ObjectManager& objManager, glm::mat4& viewMatrix, const float& angleDegree, glm::vec2& imageSize, glm::vec4& lightPos) {
 
