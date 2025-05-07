@@ -1,9 +1,11 @@
 #include "Intersection.h"
 
-namespace Intersection {
+namespace Intersection
+{
     // Normal Interpolation
     // Concept for the Algorithm: https://www.khronos.org/opengl/wiki/Calculating_a_Surface_Normal
-    glm::vec3 calculateTriangleNormal(const Triangle& triangle) {
+    glm::vec3 calculateTriangleNormal(const Triangle &triangle)
+    {
         glm::vec3 v1 = triangle.pointTwo - triangle.pointOne;
         glm::vec3 v2 = triangle.pointThree - triangle.pointOne;
         glm::vec3 normal = glm::cross(v1, v2);
@@ -13,7 +15,8 @@ namespace Intersection {
     // Triangle Intersection
     // This implementation uses the Möller–Trumbore intersection algorithm
     // Concept for the Algorithm: https://www.graphics.cornell.edu/pubs/1997/MT97.pdf
-    float rayTriangleIntersection(const Ray& ray, const Triangle& triangle) {
+    float rayTriangleIntersection(const Ray &ray, const Triangle &triangle)
+    {
         // Intersection of a ray with a triangle
         // Triangle Point1 in Cartesian Form
         glm::vec3 tP1Cartesian = glm::vec3(triangle.pointOne) / triangle.pointOne.w;
@@ -27,7 +30,8 @@ namespace Intersection {
         glm::vec3 pvec = glm::cross(ray.direction, p1p3);
         float det = glm::dot(p1p2, pvec);
 
-        if (fabs(det) < 1e-12f) return -INFINITY;
+        if (fabs(det) < 1e-12f)
+            return -INFINITY;
 
         // inverse Determinant
         float invDet = 1.0f / det;
@@ -35,41 +39,47 @@ namespace Intersection {
         glm::vec3 tvec = ray.origin - tP1Cartesian;
         // u and v paramter
         float u = glm::dot(tvec, pvec) * invDet;
-        if (u < 0.0f || u > 1.0f) return -INFINITY;
+        if (u < 0.0f || u > 1.0f)
+            return -INFINITY;
         glm::vec3 qvec = glm::cross(tvec, p1p2);
         float v = glm::dot(ray.direction, qvec) * invDet;
-        if (v < 0.0f || u + v > 1.0f) return -INFINITY;
+        if (v < 0.0f || u + v > 1.0f)
+            return -INFINITY;
         // intersection distance
         float t = glm::dot(p1p3, qvec) * invDet;
 
         // Check if triangle is behind ray
-        if (t < 0.0f) return -INFINITY;
+        if (t < 0.0f)
+            return -INFINITY;
         return t;
     }
 
     // Shadow Intersection
     // Sends out Ray from intersection to light source. If object is in between, there is shadow
-    bool shadowIntersection(ObjectManager& objManager, const glm::vec3& lightPos, const float& fDistance, const Ray& ray) {
-        const std::vector<Triangle>& triangles = objManager.triangles;
+    bool shadowIntersection(ObjectManager &objManager, const glm::vec3 &lightPos, const float &fDistance, const Ray &ray)
+    {
+        const std::vector<Triangle> &triangles = objManager.triangles;
         // const std::vector<Triangle>& trianglesBox = pairShadow.second;
         Ray shadowRay(lightPos - ray.direction * fDistance);
         shadowRay.origin = ray.direction * fDistance;
         // shadowRay.origin += ray.direction * 0.001f; // add small value to prevent shadowAcne
-            // Prevents intersection between same object
-            // if (shadowObjFilename != currentObjFilename) {
-        for (int i = 0; i < triangles.size(); i++) {
+        // Prevents intersection between same object
+        // if (shadowObjFilename != currentObjFilename) {
+        for (int i = 0; i < triangles.size(); i++)
+        {
             float shadowDistance = Intersection::rayTriangleIntersection(shadowRay, triangles[i]);
-            if (shadowDistance != -INFINITY) {
+            if (shadowDistance != -INFINITY)
+            {
                 return true;
             }
-
         }
         return false;
     }
 
     // Phong Shading
     // Concept for the Algorithm: https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates.html
-    glm::vec3 calculateBarycentricCoords(const Triangle& triangle, const glm::vec3& point) {
+    glm::vec3 calculateBarycentricCoords(const Triangle &triangle, const glm::vec3 &point)
+    {
         // Triangle Point1 in Cartesian Form
         glm::vec3 tP1Cartesian = glm::vec3(triangle.pointOne) / triangle.pointOne.w;
         glm::vec3 tP2Cartesian = glm::vec3(triangle.pointTwo) / triangle.pointTwo.w;
@@ -93,7 +103,7 @@ namespace Intersection {
         float d21 = glm::dot(v2, v1);
 
         // Compute the denominator of the barycentric coordinates formula
-        // It normalizes the coordinates, ensuring they sum to 1. 
+        // It normalizes the coordinates, ensuring they sum to 1.
         // This step ensures that the point lies within the triangle
         float denom = d00 * d11 - d01 * d01;
 
@@ -109,16 +119,15 @@ namespace Intersection {
         return glm::vec3(u, v, w);
     }
 
-
     // Phong Shading
     // Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_02\_shading.pdf
-    glm::vec3 interpolateNormal(const Triangle& triangle, const glm::vec3& barycentricCoords) {
-        // By multiplying each vertex normal by its corresponding barycentric coordinate, 
+    glm::vec3 interpolateNormal(const Triangle &triangle, const glm::vec3 &barycentricCoords)
+    {
+        // By multiplying each vertex normal by its corresponding barycentric coordinate,
         // I am weighting each normal by how much influence that vertex has at the point of interest.
         return glm::normalize(
             barycentricCoords.x * triangle.normalOne +
             barycentricCoords.y * triangle.normalTwo +
-            barycentricCoords.z * triangle.normalThree
-        );
+            barycentricCoords.z * triangle.normalThree);
     }
 } // namespace Intersection

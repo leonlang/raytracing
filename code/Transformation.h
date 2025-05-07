@@ -6,8 +6,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
-
-class Transformation {
+class Transformation
+{
 public:
     static glm::mat4 scaleObj(float sx, float sy, float sz);
     static glm::mat4 rotateObjX(float degree);

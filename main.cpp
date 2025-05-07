@@ -18,8 +18,6 @@
 #define TINYOBJLOADER_USE_MAPBOX_EARCUT
 #include "tiny_obj_loader.h"
 
-
-
 // Notes:
 // Each covered Function presents an introduction. For example: Triangle Intersection corresponds to the same section in the report
 // For Vec Math the library glm is used: https://github.com/g-truc/glm
@@ -27,59 +25,64 @@
 // For Image Reading and Output the libraries stb: https://github.com/nothings/stb
 // and CImg: https://cimg.eu/ are used.
 
-
-
-
-// Combines the Methods for Data Hierarchies Triangle Intersection and Shadows 
-glm::vec3 computeColorPoint(const Ray& ray, ObjectManager& objManager, const glm::vec3& lightPos, std::vector<glm::vec3>& randomCoordinates) {
+// Combines the Methods for Data Hierarchies Triangle Intersection and Shadows
+glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates)
+{
 
 	glm::vec3 colorPoint(0, 0, 0);
 	float distanceComparison = INFINITY;
-	for (int k = 0; k < objManager.triangles.size(); k++) {
+	for (int k = 0; k < objManager.triangles.size(); k++)
+	{
 
 		float fDistance = Intersection::rayTriangleIntersection(ray, objManager.triangles.at(k));
-		
+
 		// Ray has hit the triangle
-		if (fDistance != -INFINITY && fDistance < distanceComparison) {
+		if (fDistance != -INFINITY && fDistance < distanceComparison)
+		{
 			distanceComparison = fDistance;
-			glm::vec3 color = Graphics::phongIllumination(objManager,objManager.triangles.at(k), ray, lightPos, fDistance);
-			
+			glm::vec3 color = Graphics::phongIllumination(objManager, objManager.triangles.at(k), ray, lightPos, fDistance);
+
 			// Check for Shadows
 			int shadowAmount = 0;
-			for (const glm::vec3& point : randomCoordinates) {
+			for (const glm::vec3 &point : randomCoordinates)
+			{
 				glm::vec3 lightPosChanged = lightPos + point;
-				if (Intersection::shadowIntersection(objManager, lightPosChanged, fDistance, ray)) { shadowAmount++; };
+				if (Intersection::shadowIntersection(objManager, lightPosChanged, fDistance, ray))
+				{
+					shadowAmount++;
+				};
 			}
 			// Graphics::reinhardtToneMapping(color, 0.5f, 2.2f);
 			color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
 			colorPoint = glm::vec3(glm::round(color * 255.0f));
 		}
-	} 
+	}
 	return colorPoint;
 }
-
-
-
 
 // Sending out Rays
 // Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
 // Sends out Rays and returns the corresponding color for each pixel
-ImageData sendRaysAndIntersectPointsColors(const glm::vec2& imageSize, const glm::vec4& lightPos, ObjectManager& objManager) {
+ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager)
+{
 	Ray ray(glm::vec3(0.0f, 0.0f, 400.0f));
 	glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
 	ImageData imageData;
-	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(5,3.0f);
-	for (int i = 0; i < imageSize.x; ++i) {
-		for (int j = 0; j < imageSize.y; ++j) {
+	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(5, 3.0f);
+	for (int i = 0; i < imageSize.x; ++i)
+	{
+		for (int j = 0; j < imageSize.y; ++j)
+		{
 			ray.direction.x = i + rayXY.x - imageSize.x / 2;
 			ray.direction.y = j + rayXY.y - imageSize.y / 2;
 
 			glm::vec3 colorPoint = computeColorPoint(ray, objManager, lightPos, randomCoordinates);
-			if (colorPoint != glm::vec3(0, 0, 0)) {
+			if (colorPoint != glm::vec3(0, 0, 0))
+			{
 				imageData.imagePoints.push_back(glm::vec2(i, j));
 				imageData.imageColors.push_back(colorPoint);
 			}
-		}	
+		}
 	}
 	return imageData;
 }
@@ -88,38 +91,40 @@ int main()
 {
 
 	// save images at different degrees based on camera
-	for (float angleDegree = 0; angleDegree < 360; angleDegree = angleDegree + 400) {
+	for (float angleDegree = 0; angleDegree < 360; angleDegree = angleDegree + 400)
+	{
 
 		// Start the timer
 		auto startInit = std::chrono::high_resolution_clock::now();
 
-		// Create an ObjectManager instance 
+		// Create an ObjectManager instance
 		glm::mat4 viewMatrix;
 		ObjectManager objManager;
-		glm::vec2 imageSize; 		
+		glm::vec2 imageSize;
 		glm::vec4 lightPos;
 
 		// Choose Szene
 		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
-		Scene::scene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
+		Scene::scene1(objManager, viewMatrix, angleDegree, imageSize, lightPos);
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
 		lightPos = glm::inverse(viewMatrix) * lightPos;
 
-		// End the timer 
+		// End the timer
 		auto endInit = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsedInit = endInit - startInit;
 		std::cout << "Time taken for OBJ Loading: " << elapsedInit.count() << " seconds " << std::endl;
 
 		// Print the loaded objects
-		for (const auto& [name, obj] : objManager.objObjects) {
+		for (const auto &[name, obj] : objManager.objObjects)
+		{
 			std::cout << "Filename: " << name << "\n";
 		}
-				
+
 		// Start the timer for RaymIntersection
 		auto start = std::chrono::high_resolution_clock::now();
 		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager);
-		// End the timer 
+		// End the timer
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsed = end - start;
 		std::cout << "Time taken for Intersection: " << elapsed.count() << " seconds " << std::endl;
