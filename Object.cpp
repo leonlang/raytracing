@@ -211,8 +211,13 @@ void ObjectManager::loadObjFile(const std::string&objName ,const std::string& ob
     // std::cout << "Triangles: " << obj.triangleStartIndex << " to " << obj.triangleEndIndex << std::endl;
 }
 
-
-// multiplies all triangles from specific obj with a matrix
+void ObjectManager::applyViewTransformation(const glm::mat4& matrix){
+    for (int i = 0; i < triangles.size(); ++i) {
+        triangles.at(i).pointOne = matrix * triangles.at(i).pointOne;
+        triangles.at(i).pointTwo = matrix * triangles.at(i).pointTwo;
+        triangles.at(i).pointThree = matrix * triangles.at(i).pointThree;
+    }
+}
 void ObjectManager::transformTriangles(const std::string& objFilename, const glm::mat4& matrix) {
 
     // std::vector<Triangle>& triangles = objObjects[objFilename].triangles;

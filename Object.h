@@ -88,6 +88,7 @@ public:
 
 
     // Method to transform triangles for a specific OBJ file 
+    void applyViewTransformation(const glm::mat4& matrix);
     void transformTriangles(const std::string& objFilename, const glm::mat4& matrix);
     void splitTrianglesForBox(Node* root);
     void createBoundingHierarchy(const std::string& objFilename);
