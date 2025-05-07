@@ -19,6 +19,8 @@ namespace Graphics {
         const glm::vec2& texCoordA, 
         const glm::vec2& texCoordB, 
         const glm::vec2& texCoordC);
+    void reinhardtToneMapping(glm::vec3& color, float exposure, float gamma);
+    std::vector<glm::vec3> generateRandomCoordinates(int amount, float range);
     void drawImage(const glm::vec2& imgSize, const std::vector<glm::vec2>& imagePoints, 
                    const std::vector<glm::vec3>& imageColors, const int& angleDegree, 
                    const bool& saveImage, const bool& displayImage);

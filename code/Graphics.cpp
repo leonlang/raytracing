@@ -140,6 +140,37 @@ glm::vec3 calculateBarycentricCoords(const Triangle& triangle, const glm::vec3& 
         return texCoord;
     }
     
+    void reinhardtToneMapping(glm::vec3& color, float exposure, float gamma) {
+        color = color / (color + exposure);
+        // color = color / (color + 0.5f);
+        // color = color / (color + 0.1f);
+        // color = color / (color + 4.0f);
+    
+        // Add Gamma
+        // glm::vec3 gamma(1.1f, 1.1f, 1.1f);
+        // glm::vec3 gamma (2.2f, 2.2f, 2.2f);
+        color = glm::pow(color, glm::vec3(gamma));
+    }
+
+    std::vector<glm::vec3> generateRandomCoordinates(int amount, float range) {
+        std::vector<glm::vec3> coordinates;
+        glm::vec3 coordinate(0, 0, 0);
+        for (int i = 0; i < amount; i++) {
+            switch (i % 3) {
+            case 0:
+                coordinate.x += range;
+                break;
+            case 1:
+                coordinate.y += range; 
+                break;
+            case 2:
+                coordinate.z += range;
+                break;
+            }
+            coordinates.push_back(coordinate);
+        }
+        return coordinates;
+    }
 
     void drawImage(const glm::vec2& imgSize, const std::vector<glm::vec2>& imagePoints, 
                    const std::vector<glm::vec3>& imageColors, const int& angleDegree, 

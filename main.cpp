@@ -28,61 +28,10 @@
 // and CImg: https://cimg.eu/ are used.
 
 
-// Shadow Intersection
-// Sends out Ray from intersection to light source. If object is in between, there is shadow
-bool shadowIntersection(ObjectManager& objManager, const glm::vec3& lightPos, const float& fDistance, const Ray& ray) {
-	const std::vector<Triangle>& triangles = objManager.triangles;
-	// const std::vector<Triangle>& trianglesBox = pairShadow.second;
-	Ray shadowRay(lightPos - ray.direction * fDistance);
-	shadowRay.origin = ray.direction * fDistance;
-	// shadowRay.origin += ray.direction * 0.001f; // add small value to prevent shadowAcne
-		// Prevents intersection between same object
-		// if (shadowObjFilename != currentObjFilename) {
-	for (int i = 0; i < triangles.size(); i++) {
-		float shadowDistance = Intersection::rayTriangleIntersection(shadowRay, triangles[i]);
-		if (shadowDistance != -INFINITY) {
-			return true;
-		}
-
-	}
-	return false;
-}
-
-void reinhardtToneMapping(glm::vec3& color) {
-	color = color / (color + 1.0f);
-	// color = color / (color + 0.5f);
-	// color = color / (color + 0.1f);
-	// color = color / (color + 4.0f);
-
-	// Add Gamma
-	glm::vec3 gamma(1.1f, 1.1f, 1.1f);
-	// glm::vec3 gamma (2.2f, 2.2f, 2.2f);
-	color = glm::pow(color, gamma);
-}
-std::vector<glm::vec3> generateRandomCoordinates(int amount, float range) {
-	std::vector<glm::vec3> coordinates;
-	glm::vec3 coordinate(0, 0, 0);
-	for (int i = 0; i < amount; i++) {
-		switch (i % 3) {
-		case 0:
-			coordinate.x += range;
-			break;
-		case 1:
-			coordinate.y += range; 
-			break;
-		case 2:
-			coordinate.z += range;
-			break;
-		}
-		coordinates.push_back(coordinate);
-	}
-	return coordinates;
-}
 
 
-// Ray Intersection with Boxes and Triangles
-// Combines the Methods for Slab Test, Bounding Box Volume Hierarchy and Triangle Intersection
-glm::vec3 rayIntersection(const Ray& ray, ObjectManager& objManager, const glm::vec3& lightPos, std::vector<glm::vec3>& randomCoordinates) {
+// Combines the Methods for Data Hierarchies Triangle Intersection and Shadows 
+glm::vec3 computeColorPoint(const Ray& ray, ObjectManager& objManager, const glm::vec3& lightPos, std::vector<glm::vec3>& randomCoordinates) {
 
 	glm::vec3 colorPoint(0, 0, 0);
 	float distanceComparison = INFINITY;
@@ -90,22 +39,20 @@ glm::vec3 rayIntersection(const Ray& ray, ObjectManager& objManager, const glm::
 
 		float fDistance = Intersection::rayTriangleIntersection(ray, objManager.triangles.at(k));
 		
+		// Ray has hit the triangle
 		if (fDistance != -INFINITY && fDistance < distanceComparison) {
 			distanceComparison = fDistance;
-
 			glm::vec3 color = Graphics::phongIllumination(objManager,objManager.triangles.at(k), ray, lightPos, fDistance);
-
+			
+			// Check for Shadows
 			int shadowAmount = 0;
 			for (const glm::vec3& point : randomCoordinates) {
 				glm::vec3 lightPosChanged = lightPos + point;
-				if (shadowIntersection(objManager, lightPosChanged, fDistance, ray)) { shadowAmount++; };
+				if (Intersection::shadowIntersection(objManager, lightPosChanged, fDistance, ray)) { shadowAmount++; };
 			}
-			std::cout << "Shadow Amount: " << shadowAmount << std::endl;
-			// glm::vec3 color = softShadow(lightAmount,objManager, objManager.triangles.at(k), ray,lightPos,fDistance);
-			// Convert 0...1 color values to 1...255 color Values
-			colorPoint.x = int((color.x * 255));
-			colorPoint.y = int((color.y * 255));
-			colorPoint.z = int((color.z * 255));
+			// Graphics::reinhardtToneMapping(color, 0.5f, 2.2f);
+			color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
+			colorPoint = glm::vec3(glm::round(color * 255.0f));
 		}
 	} 
 	return colorPoint;
@@ -121,13 +68,13 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2& imageSize, const glm
 	Ray ray(glm::vec3(0.0f, 0.0f, 400.0f));
 	glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
 	ImageData imageData;
-	std::vector<glm::vec3> randomCoordinates = generateRandomCoordinates(5,3.0f);
+	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(5,3.0f);
 	for (int i = 0; i < imageSize.x; ++i) {
 		for (int j = 0; j < imageSize.y; ++j) {
 			ray.direction.x = i + rayXY.x - imageSize.x / 2;
 			ray.direction.y = j + rayXY.y - imageSize.y / 2;
 
-			glm::vec3 colorPoint = rayIntersection(ray, objManager, lightPos, randomCoordinates);
+			glm::vec3 colorPoint = computeColorPoint(ray, objManager, lightPos, randomCoordinates);
 			if (colorPoint != glm::vec3(0, 0, 0)) {
 				imageData.imagePoints.push_back(glm::vec2(i, j));
 				imageData.imageColors.push_back(colorPoint);

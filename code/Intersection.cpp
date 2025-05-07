@@ -47,6 +47,26 @@ namespace Intersection {
         return t;
     }
 
+    // Shadow Intersection
+    // Sends out Ray from intersection to light source. If object is in between, there is shadow
+    bool shadowIntersection(ObjectManager& objManager, const glm::vec3& lightPos, const float& fDistance, const Ray& ray) {
+        const std::vector<Triangle>& triangles = objManager.triangles;
+        // const std::vector<Triangle>& trianglesBox = pairShadow.second;
+        Ray shadowRay(lightPos - ray.direction * fDistance);
+        shadowRay.origin = ray.direction * fDistance;
+        // shadowRay.origin += ray.direction * 0.001f; // add small value to prevent shadowAcne
+            // Prevents intersection between same object
+            // if (shadowObjFilename != currentObjFilename) {
+        for (int i = 0; i < triangles.size(); i++) {
+            float shadowDistance = Intersection::rayTriangleIntersection(shadowRay, triangles[i]);
+            if (shadowDistance != -INFINITY) {
+                return true;
+            }
+
+        }
+        return false;
+    }
+
     // Phong Shading
     // Concept for the Algorithm: https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates.html
     glm::vec3 calculateBarycentricCoords(const Triangle& triangle, const glm::vec3& point) {
