@@ -7,6 +7,7 @@
 #include "code/Scene.h"
 #include "code/Graphics.h"
 #include "code/Intersection.h"
+#include "code/Datastructure.h"
 
 // Import external libraries
 #include <iostream>

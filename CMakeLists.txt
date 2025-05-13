@@ -37,7 +37,7 @@ if(APPLE)
 endif()
 
 # Add the executable
-add_executable(main main.cpp code/Transformation.cpp code/Object.cpp code/Scene.cpp code/Graphics.cpp code/Intersection.cpp)
+add_executable(main main.cpp code/Transformation.cpp code/Object.cpp code/Scene.cpp code/Graphics.cpp code/Intersection.cpp code/Datastructure.cpp)
 
 # Include the CImg and stb directories
 target_include_directories(main PRIVATE ${CMAKE_BINARY_DIR}/_deps/cimg-src)
