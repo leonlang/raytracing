@@ -56,7 +56,7 @@ namespace Intersection
 
     // Shadow Intersection
     // Sends out Ray from intersection to light source. If object is in between, there is shadow
-    bool shadowIntersection(ObjectManager &objManager, const glm::vec3 &lightPos, const float &fDistance, const Ray &ray)
+    bool shadowIntersection(ObjectManager &objManager,Datastructure &datastructure, const glm::vec3 &lightPos, const float &fDistance, const Ray &ray)
     {
         const std::vector<Triangle> &triangles = objManager.triangles;
         // const std::vector<Triangle>& trianglesBox = pairShadow.second;
@@ -65,9 +65,11 @@ namespace Intersection
         // shadowRay.origin += ray.direction * 0.001f; // add small value to prevent shadowAcne
         // Prevents intersection between same object
         // if (shadowObjFilename != currentObjFilename) {
-        for (int i = 0; i < triangles.size(); i++)
+        // for (int i = 0; i < triangles.size(); i++)
+        // {
+        for (int k : datastructure.triangleNumbers) 
         {
-            float shadowDistance = Intersection::rayTriangleIntersection(shadowRay, triangles[i]);
+            float shadowDistance = Intersection::rayTriangleIntersection(shadowRay, triangles[k]);
             if (shadowDistance != -INFINITY)
             {
                 return true;

@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 #include "Object.h"
+#include "Datastructure.h"
 
 namespace Intersection
 {
@@ -14,7 +15,7 @@ namespace Intersection
     // Computes the intersection of a ray with a triangle using Möller–Trumbore algorithm
     float rayTriangleIntersection(const Ray &ray, const Triangle &triangle);
 
-    bool shadowIntersection(ObjectManager &objManager, const glm::vec3 &lightPos, const float &fDistance, const Ray &ray);
+    bool shadowIntersection(ObjectManager &objManager,Datastructure &datastructure, const glm::vec3 &lightPos, const float &fDistance, const Ray &ray);
     // Computes the barycentric coordinates for a point within a triangle
     glm::vec3 calculateBarycentricCoords(const Triangle &triangle, const glm::vec3 &point);
 

@@ -27,16 +27,19 @@
 // and CImg: https://cimg.eu/ are used.
 
 // Combines the Methods for Data Hierarchies Triangle Intersection and Shadows
-glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates)
+glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastructure &datastructure, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates)
 {
 	glm::vec3 colorPoint(0, 0, 0);
 	float distanceComparison = INFINITY;
 	// Add data hierarchies here. They should result a vector
 	// which contains the indexes of the triangles which are left
 	// The for looop goes through those triangles
-	for (int k = 0; k < objManager.triangles.size(); k++)
-	{
 
+	// for (int k = 0; k < objManager.triangles.size(); k++)
+	//{
+
+	for (int k : datastructure.checkIntersection(ray))
+	{
 		float fDistance = Intersection::rayTriangleIntersection(ray, objManager.triangles.at(k));
 
 		// Ray has hit the triangle
@@ -46,17 +49,21 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, const glm
 			glm::vec3 color = Graphics::phongIllumination(objManager, objManager.triangles.at(k), ray, lightPos, fDistance);
 
 			// Check for Shadows
+			bool isShadow = false;
 			int shadowAmount = 0;
-			for (const glm::vec3 &point : randomCoordinates)
+			if (isShadow)
 			{
-				glm::vec3 lightPosChanged = lightPos + point;
-				// Add data hierarchies here. They should result a vector
-				// which contains the indexes of the triangles which are left
-				// The for looop goes through those triangles
-				if (Intersection::shadowIntersection(objManager, lightPosChanged, fDistance, ray))
+				for (const glm::vec3 &point : randomCoordinates)
 				{
-					shadowAmount++;
-				};
+					glm::vec3 lightPosChanged = lightPos + point;
+					// Add data hierarchies here. They should result a vector
+					// which contains the indexes of the triangles which are left
+					// The for looop goes through those triangles
+					if (Intersection::shadowIntersection(objManager, datastructure, lightPosChanged, fDistance, ray))
+					{
+						shadowAmount++;
+					};
+				}
 			}
 			// Graphics::reinhardtToneMapping(color, 0.5f, 2.2f);
 			color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
@@ -69,12 +76,12 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, const glm
 // Sending out Rays
 // Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
 // Sends out Rays and returns the corresponding color for each pixel
-ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager)
+ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure)
 {
 	Ray ray(glm::vec3(0.0f, 0.0f, 400.0f));
 	glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
 	ImageData imageData;
-	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(5, 3.0f);
+	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(1, 3.0f);
 	for (int i = 0; i < imageSize.x; ++i)
 	{
 		for (int j = 0; j < imageSize.y; ++j)
@@ -82,7 +89,7 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 			ray.direction.x = i + rayXY.x - imageSize.x / 2;
 			ray.direction.y = j + rayXY.y - imageSize.y / 2;
 
-			glm::vec3 colorPoint = computeColorPoint(ray, objManager, lightPos, randomCoordinates);
+			glm::vec3 colorPoint = computeColorPoint(ray, objManager, datastructure, lightPos, randomCoordinates);
 			if (colorPoint != glm::vec3(0, 0, 0))
 			{
 				imageData.imagePoints.push_back(glm::vec2(i, j));
@@ -106,6 +113,7 @@ int main()
 		// Create an ObjectManager instance
 		glm::mat4 viewMatrix;
 		ObjectManager objManager;
+		Datastructure datastructure;
 		glm::vec2 imageSize;
 		glm::vec4 lightPos;
 
@@ -129,7 +137,11 @@ int main()
 
 		// Start the timer for RaymIntersection
 		auto start = std::chrono::high_resolution_clock::now();
-		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager);
+
+		// Example Triangles
+		datastructure.fillTriangleNumbers(0, objManager.triangles.size() - 1);
+		datastructure.initDatastructure({objManager.triangles});
+		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure);
 		// End the timer
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsed = end - start;
