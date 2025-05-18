@@ -93,3 +93,45 @@ bool Datastructure::intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, co
 
     return true;
 }
+
+std::vector<bool> Lbvh::coordinateToBits(glm::vec3 &coordinate)
+{
+    glm::ivec3 coordinateInt = glm::ivec3(coordinate);
+    std::cout << "Coordinate: " << coordinateInt.x << ", " << coordinateInt.y << ", " << coordinateInt.z << std::endl;
+    // Store in 16 bits (bool true = 1, false = 0)
+    int bitNumber = 16;
+    int bitValue = std::pow(2, bitNumber - 1);
+    std::cout << bitValue << "BitVaule:" << std::endl;
+    std::vector<bool> bits;
+    int bitVala = bitValue % 40000;
+    for (int i = 0; i < bitNumber; ++i)
+    {
+        for (int j = 0; j < 1; ++j)
+        {
+            if (coordinateInt[j] >= bitValue)
+            {
+                bits.push_back(true);
+                coordinateInt[j] = coordinateInt[j] % bitValue;
+            }
+            else
+            {
+                bits.push_back(false);
+            }
+        }
+        bitValue = bitValue / 2;
+    }
+    // Print all bits as 0 or 1
+    std::cout << "Bits: ";
+    for (bool bit : bits)
+    {
+        std::cout << (bit ? 1 : 0) << " ";
+    }
+
+    return bits;
+}
+
+glm::vec3 Lbvh::centralCoordinates(Triangle &triangle)
+{
+    glm::vec3 center = (triangle.pointOne + triangle.pointTwo + triangle.pointThree) / 3.0f;
+    return center;
+}

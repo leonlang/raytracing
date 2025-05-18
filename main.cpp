@@ -49,7 +49,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 			glm::vec3 color = Graphics::phongIllumination(objManager, objManager.triangles.at(k), ray, lightPos, fDistance);
 
 			// Check for Shadows
-			bool isShadow = false;
+			bool isShadow = true;
 			int shadowAmount = 0;
 			if (isShadow)
 			{
@@ -116,6 +116,12 @@ int main()
 		Datastructure datastructure;
 		glm::vec2 imageSize;
 		glm::vec4 lightPos;
+
+
+		Lbvh lbvh;
+		glm::vec3 sampleCoordinate(65531.0f, 30000.0f, 1600.0f);
+		lbvh.coordinateToBits(sampleCoordinate);
+
 
 		// Choose Szene
 		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);

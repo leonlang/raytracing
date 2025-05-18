@@ -17,5 +17,11 @@ public:
     void fillTriangleNumbers(int a, int b);
     bool intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, const glm::vec3 &maxBox);
 };
+class Lbvh
+{
+public:
+    glm::vec3 centralCoordinates(Triangle &triangle);
+    std::vector<bool> coordinateToBits(glm::vec3 &coordinate);
+};
 
 #endif // DATASTRUCTURE_H
