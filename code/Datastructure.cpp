@@ -24,6 +24,9 @@ std::vector<int> Datastructure::checkIntersection(const Ray &ray)
 
 void Datastructure::createBoundingBox(const std::vector<Triangle> &triangles)
 {
+    minBox = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+    maxBox = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
     for (const Triangle &t : triangles)
     {
         minBox = glm::min(minBox, glm::vec3(t.pointOne) / t.pointOne.w);
@@ -148,6 +151,8 @@ glm::vec3 Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
     glm::vec3 maxBox(0.0f);
     for (const Triangle &t : triangles)
     {
+        minBox = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+        maxBox = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
         // Get Bounding Box and use it to calculate the length in each direction
         minBox = glm::min(minBox, glm::vec3(t.pointOne) / t.pointOne.w);
         minBox = glm::min(minBox, glm::vec3(t.pointTwo) / t.pointTwo.w);
@@ -156,6 +161,7 @@ glm::vec3 Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
         maxBox = glm::max(maxBox, glm::vec3(t.pointTwo) / t.pointTwo.w);
         maxBox = glm::max(maxBox, glm::vec3(t.pointThree)  / t.pointThree.w);       
         glm::vec3 size = maxBox - minBox; // Calculate the size of the triangle
+        // std::cout << "Size: " << size.x << ", " << size.y << ", " << size.z << std::endl;
         avgSize += size;
     }
     avgSize /= static_cast<float>(triangles.size());

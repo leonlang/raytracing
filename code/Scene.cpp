@@ -23,9 +23,9 @@ namespace Scene
         objManager.transformTriangles("cube", Transformation::changeObjPosition(glm::vec3(0.f, 15.f, -15.f)));
 
         // Uncomment and use these lines if needed
-        // objManager.loadObjFile("cube2", "./obj/cube2.obj");
-        // objManager.transformTriangles("cube2", Transformation::scaleObj(10.0f, 10.0f, 10.0f));
-        // objManager.transformTriangles("cube2", Transformation::changeObjPosition(glm::vec3(0.f, 15.f, 15.f)));
+        objManager.loadObjFile("cube2", "./obj/cube.obj");
+        objManager.transformTriangles("cube2", Transformation::scaleObj(10.0f, 10.0f, 10.0f));
+        objManager.transformTriangles("cube2", Transformation::changeObjPosition(glm::vec3(0.f, 15.f, 15.f)));
         // objManager.loadObjFile("sphere", "./obj/sphere.obj");
         // objManager.loadObjFile("cat2", "./obj/cat/cat.obj");
 
