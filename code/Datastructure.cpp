@@ -5,6 +5,11 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
 {
     // Datastructure 1: Simple intersection with one box which contains all triangles
     createBoundingBox(triangles);
+    Lbvh lbvh;
+    // glm::vec3 avgSize = lbvh.avgTriangleSize(triangles);
+    int gridSize = lbvh.gridSize(triangles);
+    std::cout << "Grid Size: " << gridSize << std::endl;
+    
 }
 
 std::vector<int> Datastructure::checkIntersection(const Ray &ray)
@@ -21,13 +26,13 @@ void Datastructure::createBoundingBox(const std::vector<Triangle> &triangles)
 {
     for (const Triangle &t : triangles)
     {
-        minBox = glm::min(minBox, glm::vec3(t.pointOne));
-        minBox = glm::min(minBox, glm::vec3(t.pointTwo));
-        minBox = glm::min(minBox, glm::vec3(t.pointThree));
+        minBox = glm::min(minBox, glm::vec3(t.pointOne) / t.pointOne.w);
+        minBox = glm::min(minBox, glm::vec3(t.pointTwo) / t.pointTwo.w);
+        minBox = glm::min(minBox, glm::vec3(t.pointThree) / t.pointThree.w);
 
-        maxBox = glm::max(maxBox, glm::vec3(t.pointOne));
-        maxBox = glm::max(maxBox, glm::vec3(t.pointTwo));
-        maxBox = glm::max(maxBox, glm::vec3(t.pointThree));
+        maxBox = glm::max(maxBox, glm::vec3(t.pointOne) / t.pointOne.w);
+        maxBox = glm::max(maxBox, glm::vec3(t.pointTwo) / t.pointTwo.w);
+        maxBox = glm::max(maxBox, glm::vec3(t.pointThree) / t.pointThree.w);
     }
     fillTriangleNumbers(0, triangles.size() - 1); // Fill triangle numbers from 0 to size-1
 }
@@ -134,4 +139,44 @@ glm::vec3 Lbvh::centralCoordinates(Triangle &triangle)
 {
     glm::vec3 center = (triangle.pointOne + triangle.pointTwo + triangle.pointThree) / 3.0f;
     return center;
+}
+
+glm::vec3 Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
+{
+    glm::vec3 avgSize(0.0f);
+    glm::vec3 minBox(0.0f);
+    glm::vec3 maxBox(0.0f);
+    for (const Triangle &t : triangles)
+    {
+        // Get Bounding Box and use it to calculate the length in each direction
+        minBox = glm::min(minBox, glm::vec3(t.pointOne) / t.pointOne.w);
+        minBox = glm::min(minBox, glm::vec3(t.pointTwo) / t.pointTwo.w);
+        minBox = glm::min(minBox, glm::vec3(t.pointThree) / t.pointThree.w);
+        maxBox = glm::max(maxBox, glm::vec3(t.pointOne) / t.pointOne.w);
+        maxBox = glm::max(maxBox, glm::vec3(t.pointTwo) / t.pointTwo.w);
+        maxBox = glm::max(maxBox, glm::vec3(t.pointThree)  / t.pointThree.w);       
+        glm::vec3 size = maxBox - minBox; // Calculate the size of the triangle
+        avgSize += size;
+    }
+    avgSize /= static_cast<float>(triangles.size());
+    return avgSize;
+}
+
+int Lbvh::gridSize(const std::vector<Triangle> &triangles)
+{
+    glm::vec3 avgSize = avgTriangleSize(triangles);
+    std::cout << "AvgSize: " << avgSize.x << ", " << avgSize.y << ", " << avgSize.z << std::endl;
+    Datastructure datastructure;
+    datastructure.createBoundingBox(triangles);
+
+
+
+    glm::vec3 minmaxvec = datastructure.maxBox - datastructure.minBox;
+    std::cout << "MinMaxVec: " << minmaxvec.x << ", " << minmaxvec.y << ", " << minmaxvec.z << std::endl;
+
+    glm::vec3 gridSizeVec = minmaxvec / avgSize;
+    float maxGridValue = std::max({gridSizeVec.x, gridSizeVec.y, gridSizeVec.z});
+    std::cout << "MaxGridValue: " << maxGridValue << std::endl;
+    return static_cast<int>(std::ceil(maxGridValue));
+
 }

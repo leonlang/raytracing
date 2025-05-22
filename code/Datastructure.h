@@ -22,6 +22,8 @@ class Lbvh
 public:
     glm::vec3 centralCoordinates(Triangle &triangle);
     std::vector<bool> coordinateToBits(glm::vec3 &coordinate);
+    glm::vec3 avgTriangleSize(const std::vector<Triangle> &triangles);
+    int gridSize(const std::vector<Triangle> &triangles);
 };
 
 #endif // DATASTRUCTURE_H
