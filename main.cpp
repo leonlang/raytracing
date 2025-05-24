@@ -118,10 +118,10 @@ int main()
 		glm::vec4 lightPos;
 
 
-		Lbvh lbvh;
+		/* Lbvh lbvh;
 		glm::vec3 sampleCoordinate(65531.0f, 30000.0f, 1600.0f);
 		lbvh.coordinateToBits(sampleCoordinate);
-
+		*/
 
 		// Choose Szene
 		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);

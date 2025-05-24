@@ -7,8 +7,9 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     createBoundingBox(triangles);
     Lbvh lbvh;
     // glm::vec3 avgSize = lbvh.avgTriangleSize(triangles);
-    int gridSize = lbvh.gridSize(triangles);
-    std::cout << "Grid Size: " << gridSize << std::endl;
+    // int gridSize = lbvh.gridSize(triangles);
+    // std::cout << "Grid Size: " << gridSize << std::endl;
+    lbvh.createTree(triangles);
     
 }
 
@@ -102,58 +103,49 @@ bool Datastructure::intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, co
     return true;
 }
 
-std::vector<bool> Lbvh::coordinateToBits(glm::vec3 &coordinate)
+std::bitset<72> Lbvh::coordinateToMorton(glm::vec3 &coordinate)
 {
     glm::ivec3 coordinateInt = glm::ivec3(coordinate);
     std::cout << "Coordinate: " << coordinateInt.x << ", " << coordinateInt.y << ", " << coordinateInt.z << std::endl;
     // Store in 16 bits (bool true = 1, false = 0)
-    int bitNumber = 16;
-    int bitValue = std::pow(2, bitNumber - 1);
-    std::cout << bitValue << "BitVaule:" << std::endl;
-    std::vector<bool> bits;
-    int bitVala = bitValue % 40000;
-    for (int i = 0; i < bitNumber; ++i)
+    const int bitSize = 24; // Each coordinate will be stored in 24 bits
+    const int bitNumber = bitSize * 3; // Total bits for x, y, z coordinates is 72 bits (24 bits each)
+    // Create a bitset with 72 bits. Convert each coordinate to 24 bits and then use them to create 72 bit morton code
+    std::bitset<bitNumber> bits;
+    for (int i = 0; i < 3; ++i) // For each coordinate x, y, z
     {
-        for (int j = 0; j < 1; ++j)
+        std::bitset<24> bits2(coordinateInt[i]); // Create a bitset with 24 bits for each coordinate
+        for (int j = 0; j < bitSize; ++j) // For each bit in the coordinate
         {
-            if (coordinateInt[j] >= bitValue)
+            if (bits2[j]) // If the bit is set
             {
-                bits.push_back(true);
-                coordinateInt[j] = coordinateInt[j] % bitValue;
+                bits.set(3 * j + i); // Set the corresponding bit in the 72 bit morton code
             }
             else
             {
-                bits.push_back(false);
+                bits.reset(3 * j + i); // Reset the corresponding bit in the 72 bit morton code
             }
         }
-        bitValue = bitValue / 2;
     }
-    // Print all bits as 0 or 1
-    std::cout << "Bits: ";
-    for (bool bit : bits)
-    {
-        std::cout << (bit ? 1 : 0) << " ";
-    }
-
     return bits;
 }
 
-glm::vec3 Lbvh::centralCoordinates(Triangle &triangle)
+glm::vec3 Lbvh::centralCoordinates(const Triangle &triangle)
 {
     glm::vec3 center = (triangle.pointOne + triangle.pointTwo + triangle.pointThree) / 3.0f;
     return center;
 }
 
-glm::vec3 Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
+float Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
 {
     glm::vec3 avgSize(0.0f);
     glm::vec3 minBox(0.0f);
     glm::vec3 maxBox(0.0f);
     for (const Triangle &t : triangles)
     {
+        // Get Bounding Box and use it to calculate the length in each direction
         minBox = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
         maxBox = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-        // Get Bounding Box and use it to calculate the length in each direction
         minBox = glm::min(minBox, glm::vec3(t.pointOne) / t.pointOne.w);
         minBox = glm::min(minBox, glm::vec3(t.pointTwo) / t.pointTwo.w);
         minBox = glm::min(minBox, glm::vec3(t.pointThree) / t.pointThree.w);
@@ -161,28 +153,56 @@ glm::vec3 Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
         maxBox = glm::max(maxBox, glm::vec3(t.pointTwo) / t.pointTwo.w);
         maxBox = glm::max(maxBox, glm::vec3(t.pointThree)  / t.pointThree.w);       
         glm::vec3 size = maxBox - minBox; // Calculate the size of the triangle
-        // std::cout << "Size: " << size.x << ", " << size.y << ", " << size.z << std::endl;
         avgSize += size;
     }
     avgSize /= static_cast<float>(triangles.size());
-    return avgSize;
+    return glm::compMax(avgSize);
 }
 
-int Lbvh::gridSize(const std::vector<Triangle> &triangles)
+std::pair<float,glm::vec3> Lbvh::gridConstruction(const std::vector<Triangle> &triangles)
 {
-    glm::vec3 avgSize = avgTriangleSize(triangles);
-    std::cout << "AvgSize: " << avgSize.x << ", " << avgSize.y << ", " << avgSize.z << std::endl;
     Datastructure datastructure;
     datastructure.createBoundingBox(triangles);
-
-
-
+    float maxObjectSize = glm::compMax(datastructure.maxBox - datastructure.minBox);
     glm::vec3 minmaxvec = datastructure.maxBox - datastructure.minBox;
-    std::cout << "MinMaxVec: " << minmaxvec.x << ", " << minmaxvec.y << ", " << minmaxvec.z << std::endl;
+    glm::vec3 negativeCoordinates = datastructure.minBox; // Check if bounding box has negative coordinates
+    return std::pair<float, glm::vec3>(maxObjectSize, negativeCoordinates);
 
-    glm::vec3 gridSizeVec = minmaxvec / avgSize;
-    float maxGridValue = std::max({gridSizeVec.x, gridSizeVec.y, gridSizeVec.z});
-    std::cout << "MaxGridValue: " << maxGridValue << std::endl;
-    return static_cast<int>(std::ceil(maxGridValue));
+}
+
+std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> &triangles)
+{
+    std::vector<mortonTriangle> mortonTriangles;
+    std::pair<float, glm::vec3> gridPair = gridConstruction(triangles);
+    float avgTSize = avgTriangleSize(triangles);
+    int gridSize = static_cast<int>(std::ceil(gridPair.first / avgTSize));
+        // std::cout << "Grid Size: " << gridSizePair.first << ", Average Size: " << gridSizePair.second << std::endl;
+   // mortonTriangle mTriangle;
+    // mTriangle.bits =  bits2;// Initialize with 24 bits
+    for (int i = 0; i < triangles.size(); ++i)
+    {
+        int gridNumber;
+
+        // int gridNumber = static_cast<int>()
+        // centered coordinates of the triangle and made positive should there be negative coordinates
+        glm::vec3 centerPositive = centralCoordinates(triangles[i]) - gridPair.second;
+        glm::vec3 triangleGridPosition = centerPositive / avgTSize; // Calculate the grid position of the triangle
+        std::cout << "Center Positive: " << centerPositive.x << ", " << centerPositive.y << ", " << centerPositive.z << std::endl;
+        
+        mortonTriangles.push_back({coordinateToMorton(triangleGridPosition),i});
+        // print coordinate to bits
+        std::cout << "Bits " << coordinateToMorton(triangleGridPosition) << " End" << std::endl;
+    }
+    return mortonTriangles;
+}
+void Lbvh::createTree(const std::vector<Triangle> &triangles)
+{
+    // std::pair<int, float> gridSizePair = gridSize(triangles);
+    // Calculate the number of bits needed to represent the grid size
+    // const size_t bits_needed = static_cast<size_t>(log2(gridSizePair.first)) + 1;
+    mortonCodes(triangles); // Get the morton code for the triangles
+    // Create a tree structure based on the triangles
+    std::cout << "Creating tree with " << triangles.size() << " triangles." << std::endl;
+    
 
 }

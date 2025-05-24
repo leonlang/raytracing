@@ -20,10 +20,17 @@ public:
 class Lbvh
 {
 public:
-    glm::vec3 centralCoordinates(Triangle &triangle);
-    std::vector<bool> coordinateToBits(glm::vec3 &coordinate);
-    glm::vec3 avgTriangleSize(const std::vector<Triangle> &triangles);
-    int gridSize(const std::vector<Triangle> &triangles);
+    struct mortonTriangle {
+        std::bitset<72> bits; // Adjust size as needed
+        int index;
+    };
+    float avgTriangleSize(const std::vector<Triangle> &triangles);
+    std::pair<float,glm::vec3> gridConstruction(const std::vector<Triangle> &triangles);
+    glm::vec3 centralCoordinates(const Triangle &triangle);
+    std::bitset<72> coordinateToMorton(glm::vec3 &coordinate);
+    std::vector<mortonTriangle> mortonCodes(const std::vector<Triangle> &triangles);
+    void createTree(const std::vector<Triangle> &triangles);
+    
 };
 
 #endif // DATASTRUCTURE_H
