@@ -5,6 +5,28 @@
 #include <glm/glm.hpp>
 #include "Object.h"
 
+
+struct Node {
+    glm::vec3 minBox;
+    glm::vec3 maxBox;
+    int triangleIndex; // -1 if this node is a bounding box, otherwise stores a valid index
+    Node* left;
+    Node* right;
+    bool hasTriangles; // Flag to indicate if this node contains a triangle or a bounding box
+
+    // Constructor for bounding box
+    Node(const glm::vec3& minBoxD, const glm::vec3& maxBoxD)
+        : minBox(minBoxD), maxBox(maxBoxD), triangleIndex(-1), left(nullptr), right(nullptr), hasTriangles(false) {
+    }
+
+    // Constructor for triangle index
+    Node(int index)
+        : triangleIndex(index), left(nullptr), right(nullptr), hasTriangles(true) {
+        minBox = glm::vec3(0); // Default values to avoid uninitialized data
+        maxBox = glm::vec3(0);
+    }
+};
+
 class Datastructure
 {
 public:

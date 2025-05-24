@@ -106,7 +106,7 @@ bool Datastructure::intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, co
 std::bitset<72> Lbvh::coordinateToMorton(glm::vec3 &coordinate)
 {
     glm::ivec3 coordinateInt = glm::ivec3(coordinate);
-    std::cout << "Coordinate: " << coordinateInt.x << ", " << coordinateInt.y << ", " << coordinateInt.z << std::endl;
+    // std::cout << "Coordinate: " << coordinateInt.x << ", " << coordinateInt.y << ", " << coordinateInt.z << std::endl;
     // Store in 16 bits (bool true = 1, false = 0)
     const int bitSize = 24; // Each coordinate will be stored in 24 bits
     const int bitNumber = bitSize * 3; // Total bits for x, y, z coordinates is 72 bits (24 bits each)
@@ -187,12 +187,25 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
         // centered coordinates of the triangle and made positive should there be negative coordinates
         glm::vec3 centerPositive = centralCoordinates(triangles[i]) - gridPair.second;
         glm::vec3 triangleGridPosition = centerPositive / avgTSize; // Calculate the grid position of the triangle
-        std::cout << "Center Positive: " << centerPositive.x << ", " << centerPositive.y << ", " << centerPositive.z << std::endl;
         
         mortonTriangles.push_back({coordinateToMorton(triangleGridPosition),i});
         // print coordinate to bits
-        std::cout << "Bits " << coordinateToMorton(triangleGridPosition) << " End" << std::endl;
+        // std::cout << "Bits " << coordinateToMorton(triangleGridPosition) << " End" << std::endl;
     }
+
+    // Sort the morton triangles based on their bits
+    std::sort(mortonTriangles.begin(), mortonTriangles.end(), [](const mortonTriangle & firstMorton, const mortonTriangle & secondMorton) {
+        return firstMorton.bits.to_string() < secondMorton.bits.to_string();
+    });
+    /* for (const auto& mt : mortonTriangles) {
+        std::cout << mt.bits << " - Index: " << mt.index << std::endl;
+        // Print center coordinates of the triangle with same index
+        glm::vec3 center = centralCoordinates(triangles[mt.index]) - gridPair.second; // Adjust center coordinates by subtracting the negative offset
+        std::cout << "Center Coordinates: " << (int)center.x << ", " << (int)center.y << ", " << (int)center.z << std::endl;
+        glm::vec3 triangleGridPosition = center / avgTSize; // Calculate the grid position of the triangle
+        std::cout << "Triangle Grid Position: " << (int)triangleGridPosition.x << ", " << (int)triangleGridPosition.y << ", " << (int)triangleGridPosition.z << std::endl;
+        std::cout << avgTSize << std::endl;
+    } */
     return mortonTriangles;
 }
 void Lbvh::createTree(const std::vector<Triangle> &triangles)
@@ -200,7 +213,11 @@ void Lbvh::createTree(const std::vector<Triangle> &triangles)
     // std::pair<int, float> gridSizePair = gridSize(triangles);
     // Calculate the number of bits needed to represent the grid size
     // const size_t bits_needed = static_cast<size_t>(log2(gridSizePair.first)) + 1;
-    mortonCodes(triangles); // Get the morton code for the triangles
+    std::vector<mortonTriangle> mortonCodeTriangles  =  mortonCodes(triangles); // Get the morton code for the triangles
+    std::vector<Node> nodes; // Vector to hold the nodes of the tree
+    for (const auto& mt : mortonCodeTriangles) {
+
+    }
     // Create a tree structure based on the triangles
     std::cout << "Creating tree with " << triangles.size() << " triangles." << std::endl;
     
