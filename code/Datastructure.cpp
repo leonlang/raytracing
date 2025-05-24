@@ -103,27 +103,27 @@ bool Datastructure::intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, co
     return true;
 }
 
-std::bitset<72> Lbvh::coordinateToMorton(glm::vec3 &coordinate)
+std::bitset<60> Lbvh::coordinateToMorton(glm::vec3 &coordinate)
 {
     glm::ivec3 coordinateInt = glm::ivec3(coordinate);
     // std::cout << "Coordinate: " << coordinateInt.x << ", " << coordinateInt.y << ", " << coordinateInt.z << std::endl;
     // Store in 16 bits (bool true = 1, false = 0)
-    const int bitSize = 24; // Each coordinate will be stored in 24 bits
-    const int bitNumber = bitSize * 3; // Total bits for x, y, z coordinates is 72 bits (24 bits each)
-    // Create a bitset with 72 bits. Convert each coordinate to 24 bits and then use them to create 72 bit morton code
+    const int bitSize = 20; // Each coordinate will be stored in 24 bits
+    const int bitNumber = bitSize * 3; // Total bits for x, y, z coordinates 
+    // Create a bitset with 72 bits. Convert each coordinate to bits and then use them to create 3x bit morton code
     std::bitset<bitNumber> bits;
     for (int i = 0; i < 3; ++i) // For each coordinate x, y, z
     {
-        std::bitset<24> bits2(coordinateInt[i]); // Create a bitset with 24 bits for each coordinate
+        std::bitset<bitSize> bits2(coordinateInt[i]); // Create a bitset for each coordinate
         for (int j = 0; j < bitSize; ++j) // For each bit in the coordinate
         {
             if (bits2[j]) // If the bit is set
             {
-                bits.set(3 * j + i); // Set the corresponding bit in the 72 bit morton code
+                bits.set(3 * j + i); // Set the corresponding bit in the  morton code
             }
             else
             {
-                bits.reset(3 * j + i); // Reset the corresponding bit in the 72 bit morton code
+                bits.reset(3 * j + i); // Reset the corresponding bit in the morton code
             }
         }
     }
@@ -176,7 +176,8 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
     std::pair<float, glm::vec3> gridPair = gridConstruction(triangles);
     float avgTSize = avgTriangleSize(triangles);
     int gridSize = static_cast<int>(std::ceil(gridPair.first / avgTSize));
-        // std::cout << "Grid Size: " << gridSizePair.first << ", Average Size: " << gridSizePair.second << std::endl;
+
+    std::cout << "Grid Size: " << gridSize << std::endl;
    // mortonTriangle mTriangle;
     // mTriangle.bits =  bits2;// Initialize with 24 bits
     for (int i = 0; i < triangles.size(); ++i)
@@ -193,10 +194,18 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
         // std::cout << "Bits " << coordinateToMorton(triangleGridPosition) << " End" << std::endl;
     }
 
+
     // Sort the morton triangles based on their bits
-    std::sort(mortonTriangles.begin(), mortonTriangles.end(), [](const mortonTriangle & firstMorton, const mortonTriangle & secondMorton) {
+
+    // String Sort, for when you need more then 64 bits
+    /* std::sort(mortonTriangles.begin(), mortonTriangles.end(), [](const mortonTriangle & firstMorton, const mortonTriangle & secondMorton) {
         return firstMorton.bits.to_string() < secondMorton.bits.to_string();
+    }); */
+    std::sort(mortonTriangles.begin(), mortonTriangles.end(), [](const mortonTriangle& firstMorton, const mortonTriangle& secondMorton) {
+        return firstMorton.bits.to_ulong() < secondMorton.bits.to_ulong();
     });
+
+
     /* for (const auto& mt : mortonTriangles) {
         std::cout << mt.bits << " - Index: " << mt.index << std::endl;
         // Print center coordinates of the triangle with same index
@@ -206,20 +215,104 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
         std::cout << "Triangle Grid Position: " << (int)triangleGridPosition.x << ", " << (int)triangleGridPosition.y << ", " << (int)triangleGridPosition.z << std::endl;
         std::cout << avgTSize << std::endl;
     } */
+
     return mortonTriangles;
 }
-void Lbvh::createTree(const std::vector<Triangle> &triangles)
+
+
+void traverseAndPrint(Node* node) {
+    if (!node) return;
+
+    std::cout << "Node ";
+    if (node->hasTriangles) {
+        std::cout << "[Triangle Index: " << node->triangleIndex << "]\n";
+    } else {
+        std::cout << "[Bounding Box] Min: (" 
+                  << node->minBox.x << ", " << node->minBox.y << ", " << node->minBox.z 
+                  << ") Max: (" << node->maxBox.x << ", " << node->maxBox.y << ", " << node->maxBox.z 
+                  << ")\n";
+    }
+
+    // Recursively traverse left and right children
+    traverseAndPrint(node->left);
+    traverseAndPrint(node->right);
+}
+
+
+Node Lbvh::createTree(const std::vector<Triangle> &triangles)
 {
     // std::pair<int, float> gridSizePair = gridSize(triangles);
     // Calculate the number of bits needed to represent the grid size
     // const size_t bits_needed = static_cast<size_t>(log2(gridSizePair.first)) + 1;
     std::vector<mortonTriangle> mortonCodeTriangles  =  mortonCodes(triangles); // Get the morton code for the triangles
-    std::vector<Node> nodes; // Vector to hold the nodes of the tree
+    std::vector<Node*> nodes; // Vector to hold the nodes of the tree
     for (const auto& mt : mortonCodeTriangles) {
-
+        nodes.push_back(new Node(mt.index)); // Create a new node for each triangle and add it to the vector
     }
+
+    while (nodes.size() > 1) {
+        std::vector<Node*> newNodes;
+
+        for (size_t i = 0; i < nodes.size(); i += 2) {
+            if (i + 1 < nodes.size()) {
+                glm::vec3 minBox;
+                glm::vec3 maxBox;
+                // Compute min and max bounding box
+                if (!nodes[i]->hasTriangles && !nodes[i + 1]->hasTriangles) {
+                    minBox = glm::min(nodes[i]->minBox, nodes[i + 1]->minBox);
+                    maxBox = glm::max(nodes[i]->maxBox, nodes[i + 1]->maxBox);
+                } 
+                // if one node has triangles and the other is a bounding box
+                else if (nodes[i]->hasTriangles && !nodes[i + 1]->hasTriangles) {
+                    Datastructure datastructure;
+                    std::vector<Triangle> trianglesForBox;
+                    trianglesForBox.push_back(triangles[nodes[i]->triangleIndex]);
+                    trianglesForBox.push_back(triangles[nodes[i + 1]->left->triangleIndex]); 
+                    trianglesForBox.push_back(triangles[nodes[i + 1]->right->triangleIndex]);
+                    datastructure.createBoundingBox(trianglesForBox);
+                    minBox = datastructure.minBox;
+                    maxBox = datastructure.maxBox;
+                } 
+                // if the other node has triangles and the first is a bounding box
+                else if (!nodes[i]->hasTriangles && nodes[i + 1]->hasTriangles) {
+                    Datastructure datastructure;
+                    std::vector<Triangle> trianglesForBox;
+                    trianglesForBox.push_back(triangles[nodes[i + 1]->triangleIndex]);
+                    trianglesForBox.push_back(triangles[nodes[i]->left->triangleIndex]);
+                    trianglesForBox.push_back(triangles[nodes[i]->right->triangleIndex]);
+                    datastructure.createBoundingBox(trianglesForBox);
+                    minBox = datastructure.minBox;
+                    maxBox = datastructure.maxBox;
+                }
+                // if both nodes have triangles, create a new bounding box
+                else {
+                    Datastructure datastructure;
+                    std::vector<Triangle> trianglesForBox;
+                    trianglesForBox.push_back(triangles[nodes[i]->triangleIndex]);
+                    trianglesForBox.push_back(triangles[nodes[i + 1]->triangleIndex]);
+                    datastructure.createBoundingBox(trianglesForBox);
+                    minBox = datastructure.minBox;
+                    maxBox = datastructure.maxBox;
+                    // If both nodes are bounding boxes, create a new bounding box
+                }
+
+                // Create parent node
+                Node* parent = new Node(minBox, maxBox);
+                parent->left = nodes[i];
+                parent->right = nodes[i+1];
+
+                newNodes.push_back(parent);
+            } else {
+                // If there's an odd number of nodes, carry the last one forward
+                newNodes.push_back(nodes[i]);
+            }
+        }
+        nodes = newNodes;
+    }
+    Node* root = nodes[0]; // The last remaining node is the root of the tree
+    // traverseAndPrint(root); // Traverse and print the tree structure
+
     // Create a tree structure based on the triangles
     std::cout << "Creating tree with " << triangles.size() << " triangles." << std::endl;
-    
-
 }
+

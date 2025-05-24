@@ -43,15 +43,15 @@ class Lbvh
 {
 public:
     struct mortonTriangle {
-        std::bitset<72> bits; // Adjust size as needed
+        std::bitset<60> bits; // Adjust size as needed
         int index;
     };
     float avgTriangleSize(const std::vector<Triangle> &triangles);
     std::pair<float,glm::vec3> gridConstruction(const std::vector<Triangle> &triangles);
     glm::vec3 centralCoordinates(const Triangle &triangle);
-    std::bitset<72> coordinateToMorton(glm::vec3 &coordinate);
+    std::bitset<60> coordinateToMorton(glm::vec3 &coordinate);
     std::vector<mortonTriangle> mortonCodes(const std::vector<Triangle> &triangles);
-    void createTree(const std::vector<Triangle> &triangles);
+    Node createTree(const std::vector<Triangle> &triangles);
     
 };
 

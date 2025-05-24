@@ -49,20 +49,6 @@ public:
     Ray(glm::vec3 d);
 };
 
-struct Node
-{
-    glm::vec3 minBox;
-    glm::vec3 maxBox;
-    std::vector<Triangle> triangles;
-    Node *left;
-    Node *right;
-
-    // Constructor to initialize the node with a value
-    Node(const std::vector<Triangle> &triangleD, const glm::vec3 &minBoxD, const glm::vec3 &maxBoxD)
-        : triangles(triangleD), minBox(minBoxD), maxBox(maxBoxD), left(nullptr), right(nullptr)
-    {
-    }
-};
 
 class ObjObject
 {
@@ -92,7 +78,7 @@ public:
     // Method to transform triangles for a specific OBJ file
     void applyViewTransformation(const glm::mat4 &matrix);
     void transformTriangles(const std::string &objFilename, const glm::mat4 &matrix);
-    void splitTrianglesForBox(Node *root);
+    // TrianglesForBox(Node *root);
     void createBoundingHierarchy(const std::string &objFilename);
 };
 
