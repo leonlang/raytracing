@@ -100,7 +100,8 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 			// If no intersection was found, the colorPoint is set to -1 so we can color it as background
 			if (colorPoint == glm::vec3(-1.f))
 			{
-				colorPoint = glm::vec3(173, 216, 230); // Background color
+				// colorPoint = glm::vec3(173, 216, 230); // Background color
+				colorPoint = glm::vec3(20, 20, 20); // Background color
 			}
 			imageData.imagePoints.push_back(glm::vec2(i, j));
 			imageData.imageColors.push_back(colorPoint);
@@ -136,7 +137,7 @@ int main()
 
 		// Choose Szene
 		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
-		Scene::sceneChair(objManager, viewMatrix, angleDegree, imageSize, lightPos);
+		Scene::sceneBMW(objManager, viewMatrix, angleDegree, imageSize, lightPos);
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
 		lightPos = glm::inverse(viewMatrix) * lightPos;

@@ -129,6 +129,27 @@ namespace Scene
 		objManager.transformTriangles("tree2", Transformation::scaleObj(0.03f, 0.03f, 0.03f));
 		objManager.transformTriangles("tree2", Transformation::rotateObjX(glm::radians(-90.f)));
 		objManager.transformTriangles("tree2", Transformation::changeObjPosition(glm::vec3(-6.f, -25.f, 25.f)));
-
     } 
+
+    void sceneBMW(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
+        glm::vec2 &imageSize, glm::vec4 &lightPos)
+        {
+
+        float radius = 500.0f;                      // Radius of the circle on which the camera moves
+        float radians = glm::radians(angleDegree);  // Convert angle from degrees to radians
+        float circleX = radius * std::cos(radians); // Calculate x coordinate on the circle
+        float circleZ = (radius - 500) * std::sin(radians); // Calculate z coordinate on the circle
+
+        viewMatrix = Transformation::createViewMatrix(glm::vec3(0.f, 0.f, 0.f),
+                                                glm::vec3(glm::radians(0.f), glm::radians(0.f), glm::radians(0.f)));
+        imageSize = glm::vec2(1920, 1080);                     // Image Size
+        lightPos = glm::vec4(500.0f, -300.0f, -200.f, 1.0f); // Light Position
+        objManager.loadObjFile("bmw", "./obj/bmw/bmw.obj");
+        objManager.transformTriangles("bmw", Transformation::rotateObjX(glm::radians(180.f)));
+        objManager.transformTriangles("bmw", Transformation::rotateObjY(glm::radians(0.f)));
+        // objManager.transformTriangles("bmw", Transformation::scaleObj(100.f, 100.f, 100.f)); 
+        objManager.transformTriangles("bmw", Transformation::changeObjPosition(glm::vec3(0.f, 50.f, 250.f))); 
+
+        }
+
 }
