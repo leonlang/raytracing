@@ -49,7 +49,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 			glm::vec3 color = Graphics::phongIllumination(objManager, objManager.triangles.at(k), ray, lightPos, fDistance);
 
 			// Check for Shadows
-			bool isShadow = true;
+			bool isShadow = false;
 			int shadowAmount = 0;
 			if (isShadow)
 			{
@@ -125,7 +125,7 @@ int main()
 
 		// Choose Szene
 		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
-		Scene::sceneChair(objManager, viewMatrix, angleDegree, imageSize, lightPos);
+		Scene::sceneComplex(objManager, viewMatrix, angleDegree, imageSize, lightPos);
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
 		lightPos = glm::inverse(viewMatrix) * lightPos;
@@ -151,7 +151,7 @@ int main()
 		auto endDatastructureInit = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsedDatastructureInit = endDatastructureInit - startDatastructureInit;
 		std::cout << "Time taken for Datastrcture Initialization: " << elapsedDatastructureInit.count() << " seconds " << std::endl;
-		/*
+		
 		auto start = std::chrono::high_resolution_clock::now();
 
 		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure);
@@ -163,6 +163,6 @@ int main()
 		// Draw Image based on found Points
 		// drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
 		Graphics::drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
-		*/
+		
 	}
 }

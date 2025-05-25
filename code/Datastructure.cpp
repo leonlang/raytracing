@@ -1,6 +1,25 @@
 #include "Datastructure.h"
 #include <glm/gtx/component_wise.hpp>
 
+
+void traverseAndPrint(Node* node) {
+    if (!node) return;
+
+    std::cout << "Node ";
+    if (node->hasTriangles) {
+        std::cout << "[Triangle Index: " << node->triangleIndex << "]\n";
+    } else {
+        std::cout << "[Bounding Box] Min: (" 
+                  << node->minBox.x << ", " << node->minBox.y << ", " << node->minBox.z 
+                  << ") Max: (" << node->maxBox.x << ", " << node->maxBox.y << ", " << node->maxBox.z 
+                  << ")\n";
+    }
+
+    // Recursively traverse left and right children
+    traverseAndPrint(node->left);
+    traverseAndPrint(node->right);
+}
+
 void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
 {
     // Datastructure 1: Simple intersection with one box which contains all triangles
@@ -9,13 +28,23 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     // glm::vec3 avgSize = lbvh.avgTriangleSize(triangles);
     // int gridSize = lbvh.gridSize(triangles);
     // std::cout << "Grid Size: " << gridSize << std::endl;
-    lbvh.createTree(triangles);
+    rootNode = lbvh.createTree(triangles);
     
 }
 
 std::vector<int> Datastructure::checkIntersection(const Ray &ray)
 {
     // Datastructure 1: Simple intersection with one box which contains all triangles
+
+    // traverseAndPrint(rootNode);
+    // Traverse tree for Lbvh and ...
+
+    std::vector<int> collectedIndices;
+    nodeBoundingBoxIntersection(rootNode, ray, collectedIndices);
+    return collectedIndices;
+
+
+    // Simple Check with one bounding box
     if (intersectRayAabb(ray, minBox, maxBox))
     {
         return triangleNumbers;
@@ -220,26 +249,10 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
 }
 
 
-void traverseAndPrint(Node* node) {
-    if (!node) return;
-
-    std::cout << "Node ";
-    if (node->hasTriangles) {
-        std::cout << "[Triangle Index: " << node->triangleIndex << "]\n";
-    } else {
-        std::cout << "[Bounding Box] Min: (" 
-                  << node->minBox.x << ", " << node->minBox.y << ", " << node->minBox.z 
-                  << ") Max: (" << node->maxBox.x << ", " << node->maxBox.y << ", " << node->maxBox.z 
-                  << ")\n";
-    }
-
-    // Recursively traverse left and right children
-    traverseAndPrint(node->left);
-    traverseAndPrint(node->right);
-}
 
 
-Node Lbvh::createTree(const std::vector<Triangle> &triangles)
+
+Node* Lbvh::createTree(const std::vector<Triangle> &triangles)
 {
     // std::pair<int, float> gridSizePair = gridSize(triangles);
     // Calculate the number of bits needed to represent the grid size
@@ -309,10 +322,32 @@ Node Lbvh::createTree(const std::vector<Triangle> &triangles)
         }
         nodes = newNodes;
     }
+
+    std::cout << "Creating tree with " << triangles.size() << " triangles." << std::endl;
+
+
     Node* root = nodes[0]; // The last remaining node is the root of the tree
+    return root; // Return the root node of the tree
     // traverseAndPrint(root); // Traverse and print the tree structure
 
-    // Create a tree structure based on the triangles
-    std::cout << "Creating tree with " << triangles.size() << " triangles." << std::endl;
 }
 
+
+void Datastructure::nodeBoundingBoxIntersection(Node* node, const Ray& ray, std::vector<int>& collectedIndices) {
+    if (!node) return; // Ensure node is valid
+
+    // If it's a leaf node containing a triangle, collect its index
+    if (node->hasTriangles) {
+        collectedIndices.push_back(node->triangleIndex);
+        return;
+    }
+
+    // If there's no intersection, return early
+    if (!intersectRayAabb(ray, node->minBox, node->maxBox)) {
+        return;
+    }
+
+    // Recurse for left and right children
+    nodeBoundingBoxIntersection(node->left, ray, collectedIndices);
+    nodeBoundingBoxIntersection(node->right, ray, collectedIndices);
+}
