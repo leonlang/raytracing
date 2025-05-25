@@ -65,9 +65,15 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 					};
 				}
 			}
-			// Graphics::reinhardtToneMapping(color, 0.5f, 2.2f);
-			color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
+			Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
+			// color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
 			colorPoint = glm::vec3(glm::round(color * 255.0f));
+			// Check if any point is over 255 and cout it
+			if (colorPoint.x > 255 || colorPoint.y > 255 || colorPoint.z > 255)
+			{
+				std::cout << "Color Point is over 255: " << colorPoint.x << ", " << colorPoint.y << ", " << colorPoint.z << std::endl;
+			}
+
 		}
 	}
 	return colorPoint;

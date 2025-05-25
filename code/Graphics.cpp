@@ -115,7 +115,7 @@ namespace Graphics
         // It is usually a small constant value added to ensure that objects are visible even when not directly lit
         // Higher AmbientStrenght = All of the Object brightens up more by the same amount
         glm::vec3 ambient = (1 / glm::pi<float>()) * triangle.ambient * objColor * lightColor;
-
+   
         // Calculate Specular Reflection
         // Specular reflection represents the mirror-like reflection of light sources on shiny surfaces
         // It does not use the object color (objectColor) because specular highlights are typically the color of the light source
@@ -129,7 +129,7 @@ namespace Graphics
         glm::vec3 specular = lightColor * triangle.specular * glm::max(dotProduct, 0.00f) * glm::pow(glm::max(glm::dot(r, v), 0.0f), triangle.shininess);
 
         // Combine the three components (diffuse, specular, and ambient) to get the final color
-        return diffuse + specular + ambient;
+        return diffuse + specular + ambient; 
     }
 
     glm::vec2 getTextureCoordinate(const glm::vec3 &barycentricCoords, const glm::vec2 &texCoordA, const glm::vec2 &texCoordB, const glm::vec2 &texCoordC)
@@ -198,6 +198,7 @@ namespace Graphics
         // Define a light blue color for the background
         unsigned char lightBlue[] = {173, 216, 230};
 
+        
         // Iterate through all the pixels
         cimg_forXY(img, x, y)
         {
@@ -209,7 +210,7 @@ namespace Graphics
                 img(x, y, 0, 2) = lightBlue[2]; // Blue channel
             }
         }
-
+        
         // Generate image name based on angle
         std::string imgName = "images/generation/output" + std::to_string(angleDegree) + ".bmp";
 
