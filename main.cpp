@@ -37,7 +37,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 
 	// for (int k = 0; k < objManager.triangles.size(); k++)
 	//{
-
+	bool isIntersection = false;
 	for (int k : datastructure.checkIntersection(ray))
 	{
 		float fDistance = Intersection::rayTriangleIntersection(ray, objManager.triangles.at(k));
@@ -45,6 +45,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 		// Ray has hit the triangle
 		if (fDistance != -INFINITY && fDistance < distanceComparison)
 		{
+			isIntersection = true;
 			distanceComparison = fDistance;
 			glm::vec3 color = Graphics::phongIllumination(objManager, objManager.triangles.at(k), ray, lightPos, fDistance);
 
@@ -67,14 +68,13 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 			}
 			Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
 			// color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
-			colorPoint = glm::vec3(glm::round(color * 255.0f));
-			// Check if any point is over 255 and cout it
-			if (colorPoint.x > 255 || colorPoint.y > 255 || colorPoint.z > 255)
-			{
-				std::cout << "Color Point is over 255: " << colorPoint.x << ", " << colorPoint.y << ", " << colorPoint.z << std::endl;
-			}
-
+			colorPoint = glm::vec3(glm::ceil(color * 255.0f));			// Check if any point is over 255 and cout it
 		}
+	}
+	// If no intersection was found, set the colorPoint to -1 so we can color it as background
+	if (!isIntersection)
+	{
+		colorPoint = glm::vec3(-1.f); // No intersection found
 	}
 	return colorPoint;
 }
@@ -96,11 +96,16 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 			ray.direction.y = j + rayXY.y - imageSize.y / 2;
 
 			glm::vec3 colorPoint = computeColorPoint(ray, objManager, datastructure, lightPos, randomCoordinates);
-			if (colorPoint != glm::vec3(0, 0, 0))
+
+			// If no intersection was found, the colorPoint is set to -1 so we can color it as background
+			if (colorPoint == glm::vec3(-1.f))
 			{
-				imageData.imagePoints.push_back(glm::vec2(i, j));
-				imageData.imageColors.push_back(colorPoint);
+				colorPoint = glm::vec3(173, 216, 230); // Background color
 			}
+			imageData.imagePoints.push_back(glm::vec2(i, j));
+			imageData.imageColors.push_back(colorPoint);
+
+
 		}
 	}
 	return imageData;
@@ -131,7 +136,7 @@ int main()
 
 		// Choose Szene
 		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
-		Scene::sceneComplex(objManager, viewMatrix, angleDegree, imageSize, lightPos);
+		Scene::sceneChair(objManager, viewMatrix, angleDegree, imageSize, lightPos);
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
 		lightPos = glm::inverse(viewMatrix) * lightPos;

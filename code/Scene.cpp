@@ -49,6 +49,7 @@ namespace Scene
         objManager.transformTriangles("chair", Transformation::rotateObjX(glm::radians(-90.f)));
         objManager.transformTriangles("chair", Transformation::rotateObjY(glm::radians(180.f)));
         objManager.transformTriangles("chair", Transformation::scaleObj(100.f, 100.f, 100.f));
+        objManager.transformTriangles("chair", Transformation::changeObjPosition(glm::vec3(-10.f, 50.f, -100.f)));
 
     }
     void scene2(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree, glm::vec2 &imageSize, glm::vec4 &lightPos)

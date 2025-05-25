@@ -194,23 +194,6 @@ namespace Graphics
             color[2] = static_cast<unsigned char>(imageColors[i].z);
             img.draw_point(imagePoints[i].x, imagePoints[i].y, color);
         }
-
-        // Define a light blue color for the background
-        unsigned char lightBlue[] = {173, 216, 230};
-
-        
-        // Iterate through all the pixels
-        cimg_forXY(img, x, y)
-        {
-            // If pixel is black, change it to light blue
-            if (img(x, y, 0, 0) == 0 && img(x, y, 0, 1) == 0 && img(x, y, 0, 2) == 0)
-            {
-                img(x, y, 0, 0) = lightBlue[0]; // Red channel
-                img(x, y, 0, 1) = lightBlue[1]; // Green channel
-                img(x, y, 0, 2) = lightBlue[2]; // Blue channel
-            }
-        }
-        
         // Generate image name based on angle
         std::string imgName = "images/generation/output" + std::to_string(angleDegree) + ".bmp";
 
