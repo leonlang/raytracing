@@ -82,7 +82,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 // Sending out Rays
 // Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
 // Sends out Rays and returns the corresponding color for each pixel
-ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure)
+ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure, glm::vec3 backgroundColor)
 {
 	Ray ray(glm::vec3(0.0f, 0.0f, 400.0f));
 	glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
@@ -101,7 +101,7 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 			if (colorPoint == glm::vec3(-1.f))
 			{
 				// colorPoint = glm::vec3(173, 216, 230); // Background color
-				colorPoint = glm::vec3(20, 20, 20); // Background color
+				colorPoint = backgroundColor; // glm::vec3(20, 20, 20); // Background color
 			}
 			imageData.imagePoints.push_back(glm::vec2(i, j));
 			imageData.imageColors.push_back(colorPoint);
@@ -128,7 +128,7 @@ int main()
 		Datastructure datastructure;
 		glm::vec2 imageSize;
 		glm::vec4 lightPos;
-
+		glm::vec3 backgroundColor(0.f,0.f,0.f);
 
 		/* Lbvh lbvh;
 		glm::vec3 sampleCoordinate(65531.0f, 30000.0f, 1600.0f);
@@ -137,7 +137,7 @@ int main()
 
 		// Choose Szene
 		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
-		Scene::sceneBMW(objManager, viewMatrix, angleDegree, imageSize, lightPos);
+		Scene::sceneBMW(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
 		lightPos = glm::inverse(viewMatrix) * lightPos;
@@ -165,8 +165,7 @@ int main()
 		std::cout << "Time taken for Datastrcture Initialization: " << elapsedDatastructureInit.count() << " seconds " << std::endl;
 		
 		auto start = std::chrono::high_resolution_clock::now();
-
-		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure);
+		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure, backgroundColor);
 		// End the timer
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsed = end - start;

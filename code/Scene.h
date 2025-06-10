@@ -10,15 +10,15 @@
 namespace Scene
 {
     void scene1(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
-                glm::vec2 &imageSize, glm::vec4 &lightPos);
+                glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
     void scene2(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
-                glm::vec2 &imageSize, glm::vec4 &lightPos);
+                glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
     void sceneChair(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
-                    glm::vec2 &imageSize, glm::vec4 &lightPos);
+                    glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
     void sceneComplex(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
-               glm::vec2 &imageSize, glm::vec4 &lightPos);
+               glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
     void sceneBMW(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
-                glm::vec2 &imageSize, glm::vec4 &lightPos);
+                glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
 }
 
 #endif // SCENE1_H

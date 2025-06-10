@@ -3,7 +3,7 @@
 namespace Scene
 {
     void scene1(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
-                glm::vec2 &imageSize, glm::vec4 &lightPos)
+                glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
     {
 
         float radius = 100.0f;                      // Radius of the circle on which the camera moves
@@ -33,7 +33,7 @@ namespace Scene
         // objManager.loadObjFile("cat5", "./obj/cat/cat.obj");
     }
     void sceneChair(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
-                    glm::vec2 &imageSize, glm::vec4 &lightPos)
+                    glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
     {
 
         float radius = 100.0f;                      // Radius of the circle on which the camera moves
@@ -52,7 +52,7 @@ namespace Scene
         objManager.transformTriangles("chair", Transformation::changeObjPosition(glm::vec3(-10.f, 50.f, -100.f)));
 
     }
-    void scene2(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree, glm::vec2 &imageSize, glm::vec4 &lightPos)
+    void scene2(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree, glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
     {
 
         // Initiate Scene with Camera and View Matrix
@@ -75,7 +75,7 @@ namespace Scene
         // Place Tree 1
     }
 
-    void sceneComplex(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree, glm::vec2 &imageSize, glm::vec4 &lightPos)
+    void sceneComplex(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree, glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
     {
 
         // Initiate Scene with Camera and View Matrix
@@ -83,6 +83,7 @@ namespace Scene
         float radians = glm::radians(angleDegree);  // Convert angle from degrees to radians
         float circleX = radius * std::cos(radians); // Calculate x coordinate on the circle
         float circleZ = radius * std::sin(radians); // Calculate z coordinate on the circle
+        backgroundColor = glm::vec3(173, 216, 230);
         // Modelview Transform
         viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, -50.f, circleZ), glm::vec3(glm::radians(30.f), glm::radians(angleDegree + 90), glm::radians(0.f)));
         imageSize = glm::vec2(600, 400);                     // Image Size
@@ -132,13 +133,14 @@ namespace Scene
     } 
 
     void sceneBMW(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
-        glm::vec2 &imageSize, glm::vec4 &lightPos)
+        glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
         {
 
         float radius = 500.0f;                      // Radius of the circle on which the camera moves
         float radians = glm::radians(angleDegree);  // Convert angle from degrees to radians
         float circleX = radius * std::cos(radians); // Calculate x coordinate on the circle
         float circleZ = (radius - 500) * std::sin(radians); // Calculate z coordinate on the circle
+        backgroundColor = glm::vec3(20.f, 20.f, 20.f); // Background Color
 
         viewMatrix = Transformation::createViewMatrix(glm::vec3(0.f, 0.f, 0.f),
                                                 glm::vec3(glm::radians(0.f), glm::radians(0.f), glm::radians(0.f)));

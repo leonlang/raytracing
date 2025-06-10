@@ -199,11 +199,13 @@ std::pair<float,glm::vec3> Lbvh::gridConstruction(const std::vector<Triangle> &t
 
 }
 
-std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> &triangles)
+std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> &triangles,float changeGridAmount)
 {
     std::vector<mortonTriangle> mortonTriangles;
     std::pair<float, glm::vec3> gridPair = gridConstruction(triangles);
-    float avgTSize = avgTriangleSize(triangles);
+    // divides by changeGridAmount to multiply the amount of grid cells by the changeGridAmount
+    // A higher changeGridAmount means that the grid cells are smaller, so less triangles are in one grid cell
+    float avgTSize = avgTriangleSize(triangles) / changeGridAmount;
     int gridSize = static_cast<int>(std::ceil(gridPair.first / avgTSize));
 
     std::cout << "Grid Size: " << gridSize << std::endl;
@@ -257,7 +259,7 @@ Node* Lbvh::createTree(const std::vector<Triangle> &triangles)
     // std::pair<int, float> gridSizePair = gridSize(triangles);
     // Calculate the number of bits needed to represent the grid size
     // const size_t bits_needed = static_cast<size_t>(log2(gridSizePair.first)) + 1;
-    std::vector<mortonTriangle> mortonCodeTriangles  =  mortonCodes(triangles); // Get the morton code for the triangles
+    std::vector<mortonTriangle> mortonCodeTriangles  =  mortonCodes(triangles,0.1f); // Get the morton code for the triangles
     std::vector<Node*> nodes; // Vector to hold the nodes of the tree
     for (const auto& mt : mortonCodeTriangles) {
         nodes.push_back(new Node(mt.index)); // Create a new node for each triangle and add it to the vector
