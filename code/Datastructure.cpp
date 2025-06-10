@@ -259,7 +259,7 @@ Node* Lbvh::createTree(const std::vector<Triangle> &triangles)
     // std::pair<int, float> gridSizePair = gridSize(triangles);
     // Calculate the number of bits needed to represent the grid size
     // const size_t bits_needed = static_cast<size_t>(log2(gridSizePair.first)) + 1;
-    std::vector<mortonTriangle> mortonCodeTriangles  =  mortonCodes(triangles,0.1f); // Get the morton code for the triangles
+    std::vector<mortonTriangle> mortonCodeTriangles  =  mortonCodes(triangles,1.f); // Get the morton code for the triangles
     std::vector<Node*> nodes; // Vector to hold the nodes of the tree
     for (const auto& mt : mortonCodeTriangles) {
         nodes.push_back(new Node(mt.index)); // Create a new node for each triangle and add it to the vector
