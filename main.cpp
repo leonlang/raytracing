@@ -85,17 +85,32 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure, glm::vec3 backgroundColor)
 {
 	Ray ray(glm::vec3(0.0f, 0.0f, 400.0f));
-	glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
+	// glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
 	ImageData imageData;
 	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(1, 3.0f);
 	for (int i = 0; i < imageSize.x; ++i)
 	{
 		for (int j = 0; j < imageSize.y; ++j)
 		{
-			ray.direction.x = i + rayXY.x - imageSize.x / 2;
-			ray.direction.y = j + rayXY.y - imageSize.y / 2;
+			// ray.direction.x = i + rayXY.x - imageSize.x / 2;
+			// ray.direction.y = j + rayXY.y - imageSize.y / 2;
+			ray.direction.x = i - imageSize.x / 2;
+			ray.direction.y = j - imageSize.y / 2;
+
+			// Start the timer which checks how long it takes to send out a single ray
+			auto startInitRay = std::chrono::high_resolution_clock::now();
 
 			glm::vec3 colorPoint = computeColorPoint(ray, objManager, datastructure, lightPos, randomCoordinates);
+
+			// End the timer
+			auto endInitRay = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> elapsedInitRay = endInitRay - startInitRay;
+			if (elapsedInitRay.count() > 0.1)
+			{
+				std::cout << "Time taken for a single Ray: " << elapsedInitRay.count() << " seconds " << std::endl;
+			}
+
+
 
 			// If no intersection was found, the colorPoint is set to -1 so we can color it as background
 			if (colorPoint == glm::vec3(-1.f))
@@ -137,7 +152,7 @@ int main()
 
 		// Choose Szene
 		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
-		Scene::sceneBMW(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
+		Scene::hairball(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
 		lightPos = glm::inverse(viewMatrix) * lightPos;

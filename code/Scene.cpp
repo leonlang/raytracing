@@ -50,7 +50,6 @@ namespace Scene
         objManager.transformTriangles("chair", Transformation::rotateObjY(glm::radians(180.f)));
         objManager.transformTriangles("chair", Transformation::scaleObj(100.f, 100.f, 100.f));
         objManager.transformTriangles("chair", Transformation::changeObjPosition(glm::vec3(-10.f, 50.f, -100.f)));
-
     }
     void scene2(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree, glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
     {
@@ -88,70 +87,119 @@ namespace Scene
         viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, -50.f, circleZ), glm::vec3(glm::radians(30.f), glm::radians(angleDegree + 90), glm::radians(0.f)));
         imageSize = glm::vec2(600, 400);                     // Image Size
         lightPos = glm::vec4(500.0f, -300.0f, -200.f, 1.0f); // Light Position
-        
-		// 1 Cube Ground
-		objManager.loadObjFile("cube","./obj/cube.obj");
-		objManager.transformTriangles("cube", Transformation::scaleObj(35.0f, 35.0f, 35.0f));
-		objManager.transformTriangles("cube", Transformation::changeObjPosition(glm::vec3(0.f, 10.f, 0.f)));
+
+        // 1 Cube Ground
+        objManager.loadObjFile("cube", "./obj/cube.obj");
+        objManager.transformTriangles("cube", Transformation::scaleObj(35.0f, 35.0f, 35.0f));
+        objManager.transformTriangles("cube", Transformation::changeObjPosition(glm::vec3(0.f, 10.f, 0.f)));
 
         // 2 Cats
-		objManager.loadObjFile("cat","./obj/cat/cat.obj");
-		objManager.transformTriangles("cat", Transformation::scaleObj(0.35f, 0.35f, 0.35f));
-		objManager.transformTriangles("cat", Transformation::rotateObjX(glm::radians(-90.f)));
-		objManager.transformTriangles("cat", Transformation::rotateObjY(glm::radians(125.f)));
-		objManager.transformTriangles("cat", Transformation::changeObjPosition(glm::vec3(25.f, -25.f, -14.f)));
+        objManager.loadObjFile("cat", "./obj/cat/cat.obj");
+        objManager.transformTriangles("cat", Transformation::scaleObj(0.35f, 0.35f, 0.35f));
+        objManager.transformTriangles("cat", Transformation::rotateObjX(glm::radians(-90.f)));
+        objManager.transformTriangles("cat", Transformation::rotateObjY(glm::radians(125.f)));
+        objManager.transformTriangles("cat", Transformation::changeObjPosition(glm::vec3(25.f, -25.f, -14.f)));
 
-        objManager.loadObjFile("cat1","./obj/cat/cat.obj");
+        objManager.loadObjFile("cat1", "./obj/cat/cat.obj");
         objManager.transformTriangles("cat1", Transformation::scaleObj(0.35f, 0.35f, 0.35f));
-		objManager.transformTriangles("cat1", Transformation::rotateObjX(glm::radians(-90.f)));
-		objManager.transformTriangles("cat1", Transformation::rotateObjY(glm::radians(70.f)));
-		objManager.transformTriangles("cat1", Transformation::changeObjPosition(glm::vec3(25.f, -25.f, 8.f)));
+        objManager.transformTriangles("cat1", Transformation::rotateObjX(glm::radians(-90.f)));
+        objManager.transformTriangles("cat1", Transformation::rotateObjY(glm::radians(70.f)));
+        objManager.transformTriangles("cat1", Transformation::changeObjPosition(glm::vec3(25.f, -25.f, 8.f)));
 
         // 1 Stanford Bunny
-		objManager.loadObjFile("bunny","./obj/stanford-bunny.obj");
-		objManager.transformTriangles("bunny", Transformation::scaleObj(50.f, 50.0f, 50.0f));
-		objManager.transformTriangles("bunny", Transformation::rotateObjX(glm::radians(181.f)));
-		objManager.transformTriangles("bunny", Transformation::rotateObjY(glm::radians(90.f)));
-		objManager.transformTriangles("bunny", Transformation::changeObjPosition(glm::vec3(25.f, -23.f, 0.f)));
-        
+        objManager.loadObjFile("bunny", "./obj/stanford-bunny.obj");
+        objManager.transformTriangles("bunny", Transformation::scaleObj(50.f, 50.0f, 50.0f));
+        objManager.transformTriangles("bunny", Transformation::rotateObjX(glm::radians(181.f)));
+        objManager.transformTriangles("bunny", Transformation::rotateObjY(glm::radians(90.f)));
+        objManager.transformTriangles("bunny", Transformation::changeObjPosition(glm::vec3(25.f, -23.f, 0.f)));
 
         // 3 Trees
-		objManager.loadObjFile("tree","./obj/tree/tree.obj");
-		objManager.transformTriangles("tree", Transformation::scaleObj(0.03f, 0.03f, 0.03f));
-		objManager.transformTriangles("tree", Transformation::rotateObjX(glm::radians(-90.f)));
-		objManager.transformTriangles("tree", Transformation::changeObjPosition(glm::vec3(-6.f, -25.f, -25.f)));
+        objManager.loadObjFile("tree", "./obj/tree/tree.obj");
+        objManager.transformTriangles("tree", Transformation::scaleObj(0.03f, 0.03f, 0.03f));
+        objManager.transformTriangles("tree", Transformation::rotateObjX(glm::radians(-90.f)));
+        objManager.transformTriangles("tree", Transformation::changeObjPosition(glm::vec3(-6.f, -25.f, -25.f)));
 
-        objManager.loadObjFile("tree1","./obj/tree/tree.obj");
-		objManager.transformTriangles("tree1", Transformation::scaleObj(0.035f, 0.035f, 0.035f));
-		objManager.transformTriangles("tree1", Transformation::rotateObjX(glm::radians(-90.f)));
-		objManager.transformTriangles("tree1", Transformation::changeObjPosition(glm::vec3(-6.f, -25.f, 0.f)));
+        objManager.loadObjFile("tree1", "./obj/tree/tree.obj");
+        objManager.transformTriangles("tree1", Transformation::scaleObj(0.035f, 0.035f, 0.035f));
+        objManager.transformTriangles("tree1", Transformation::rotateObjX(glm::radians(-90.f)));
+        objManager.transformTriangles("tree1", Transformation::changeObjPosition(glm::vec3(-6.f, -25.f, 0.f)));
 
-        objManager.loadObjFile("tree2","./obj/tree/tree.obj");
-		objManager.transformTriangles("tree2", Transformation::scaleObj(0.03f, 0.03f, 0.03f));
-		objManager.transformTriangles("tree2", Transformation::rotateObjX(glm::radians(-90.f)));
-		objManager.transformTriangles("tree2", Transformation::changeObjPosition(glm::vec3(-6.f, -25.f, 25.f)));
-    } 
+        objManager.loadObjFile("tree2", "./obj/tree/tree.obj");
+        objManager.transformTriangles("tree2", Transformation::scaleObj(0.03f, 0.03f, 0.03f));
+        objManager.transformTriangles("tree2", Transformation::rotateObjX(glm::radians(-90.f)));
+        objManager.transformTriangles("tree2", Transformation::changeObjPosition(glm::vec3(-6.f, -25.f, 25.f)));
+    }
 
     void sceneBMW(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
-        glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
-        {
+                  glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
+    {
 
-        float radius = 500.0f;                      // Radius of the circle on which the camera moves
-        float radians = glm::radians(angleDegree);  // Convert angle from degrees to radians
-        float circleX = radius * std::cos(radians); // Calculate x coordinate on the circle
+        float radius = 500.0f;                              // Radius of the circle on which the camera moves
+        float radians = glm::radians(angleDegree);          // Convert angle from degrees to radians
+        float circleX = radius * std::cos(radians);         // Calculate x coordinate on the circle
         float circleZ = (radius - 500) * std::sin(radians); // Calculate z coordinate on the circle
-        backgroundColor = glm::vec3(20.f, 20.f, 20.f); // Background Color
+        backgroundColor = glm::vec3(20.f, 20.f, 20.f);      // Background Color
 
         viewMatrix = Transformation::createViewMatrix(glm::vec3(0.f, 0.f, 0.f),
-                                                glm::vec3(glm::radians(0.f), glm::radians(0.f), glm::radians(0.f)));
-        imageSize = glm::vec2(1920, 1080);                     // Image Size
+                                                      glm::vec3(glm::radians(0.f), glm::radians(0.f), glm::radians(0.f)));
+        imageSize = glm::vec2(1920, 1080);                   // Image Size
         lightPos = glm::vec4(500.0f, -300.0f, -200.f, 1.0f); // Light Position
         objManager.loadObjFile("bmw", "./obj/bmw/bmw.obj");
         objManager.transformTriangles("bmw", Transformation::rotateObjX(glm::radians(180.f)));
         objManager.transformTriangles("bmw", Transformation::rotateObjY(glm::radians(0.f)));
-        // objManager.transformTriangles("bmw", Transformation::scaleObj(100.f, 100.f, 100.f)); 
-        objManager.transformTriangles("bmw", Transformation::changeObjPosition(glm::vec3(0.f, 50.f, 250.f))); 
+        // objManager.transformTriangles("bmw", Transformation::scaleObj(100.f, 100.f, 100.f));
+        objManager.transformTriangles("bmw", Transformation::changeObjPosition(glm::vec3(0.f, 50.f, 250.f)));
+    }
 
+    void hairball(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
+                  glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
+    {
+
+        float radius = 500.0f;                              // Radius of the circle on which the camera moves
+        float radians = glm::radians(angleDegree);          // Convert angle from degrees to radians
+        float circleX = radius * std::sin(radians);         // Calculate x coordinate on the circle 
+        float circleZ = radius * std::cos(radians);         // Calculate z coordinate on the circle
+        backgroundColor = glm::vec3(200.f, 200.f, 200.f);      // Background Color
+        viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, 0.0f, -circleZ), glm::vec3(glm::radians(0.0f), glm::radians(angleDegree), glm::radians(0.f)));
+
+        imageSize = glm::vec2(1920, 1080);                   // Image Size
+        lightPos = glm::vec4(500.0f, -300.0f, -200.f, 1.0f); // Light Position
+        objManager.loadObjFile("hairball", "./obj/hairball.obj");
+        // objManager.transformTriangles("hairball", Transformation::rotateObjX(glm::radians(180.f)));
+        // objManager.transformTriangles("hairball", Transformation::rotateObjY(glm::radians(0.f)));
+        objManager.transformTriangles("hairball", Transformation::scaleObj(90.f, 90.f, 90.f));
+        // objManager.transformTriangles("hairball", Transformation::changeObjPosition(glm::vec3(0.f, 50.f, 250.f)));  
+    }
+
+    void trees(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
+                  glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
+    {
+        float radius = 500.0f;                              // Radius of the circle on which the camera moves
+        float radians = glm::radians(angleDegree);          // Convert angle from degrees to radians
+        float circleX = radius * std::sin(radians);         // Calculate x coordinate on the circle 
+        float circleZ = radius * std::cos(radians);         // Calculate z coordinate on the circle
+        backgroundColor = glm::vec3(20.f, 20.f, 20.f);      // Background Color
+
+        // float lookDownAngle = 20.f; // Angle to look down
+        // float lookDownY = -200.0f; // Y position to look down from
+        // viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, lookDownY, -circleZ), glm::vec3(glm::radians(lookDownAngle), glm::radians(angleDegree), glm::radians(0.f)));
+        viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, 0.0f, -circleZ), glm::vec3(glm::radians(0.0f), glm::radians(angleDegree), glm::radians(0.f)));
+
+        imageSize = glm::vec2(600, 400);                   // Image Size
+        lightPos = glm::vec4(500.0f, -300.0f, -200.f, 1.0f); // Light Position
+        // create 10 more trees in a loop for a forest-like scene
+        for (int i = 1; i <= 1; ++i)
+        {
+            std::string treeName = "chestnut" + std::to_string(i);
+            objManager.loadObjFile(treeName, "./obj/chestnut/chestnut.obj");
+            // objManager.transformTriangles(treeName, Transformation::scaleObj(800.f, 800.03f, 800.03f));
+            // objManager.transformTriangles(treeName, Transformation::rotateObjX(glm::radians(180.f)));
+            // objManager.transformTriangles(treeName, Transformation::changeObjPosition(glm::vec3(0,0,600)));
+            objManager.transformTriangles(treeName, Transformation::changeObjPosition(glm::vec3(-6.f + i * 2.f, -25.f, -25.f + i * 2.f)));
         }
-
+        /* objManager.transformTriangles("hairball", Transformation::rotateObjX(glm::radians(180.f)));
+        objManager.transformTriangles("hairball", Transformation::rotateObjY(glm::radians(0.f)));
+        // objManager.transformTriangles("hairball", Transformation::scaleObj(100.f, 100.f, 100.f));
+        objManager.transformTriangles("hairball", Transformation::changeObjPosition(glm::vec3(0.f, 50.f, 250.f)));  */
+    }
 }

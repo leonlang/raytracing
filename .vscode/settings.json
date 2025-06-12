@@ -52,6 +52,7 @@
         "variant": "cpp",
         "vector": "cpp",
         "complex": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "memory": "cpp"
     }
 }
