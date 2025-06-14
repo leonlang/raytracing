@@ -84,7 +84,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 // Sends out Rays and returns the corresponding color for each pixel
 ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure, glm::vec3 backgroundColor)
 {
-	Ray ray(glm::vec3(0.0f, 0.0f, 400.0f));
+	Ray ray(glm::vec3(0.0f, 0.0f, 100000.0f));
 	// glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
 	ImageData imageData;
 	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(1, 3.0f);
@@ -152,7 +152,7 @@ int main()
 
 		// Choose Szene
 		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
-		Scene::hairball(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
+		Scene::forest(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
 		lightPos = glm::inverse(viewMatrix) * lightPos;

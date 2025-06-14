@@ -71,11 +71,11 @@ namespace Graphics
             glm::ivec2 texDim = objManager.textureDimensions[triangle.textureName];
 
             size_t texIndex = (static_cast<int>(interpolatedTexCoordinate.y) * texDim.x + static_cast<int>(interpolatedTexCoordinate.x)) * 3;
+  
             objColor.x = texData[texIndex + 0] / 255.0f;
             objColor.y = texData[texIndex + 1] / 255.0f;
             objColor.z = texData[texIndex + 2] / 255.0f;
         }
-
         // Phong illumination model
         // std::cout << "Triangle Diffuse: " << triangle.diffuse.x << " " << triangle.diffuse.y << " " << triangle.diffuse.z << std::endl;
         const glm::vec3 lightColor(1.0f, 1.0f, 1.0f); // White light

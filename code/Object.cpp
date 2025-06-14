@@ -134,10 +134,21 @@ void ObjectManager::loadObjFile(const std::string &objName, const std::string &o
                                 if (texDim.x > 0 && texDim.y > 0 && texData)
                                 {
                                     int u = static_cast<int>(std::floor(tx * texDim.x)) % texDim.x;
+                                    // Ensure u is within bounds and doesn't get moduled to 0
+                                    if (tx == 1) {
+                                        u = texDim.x - 1; // Ensure u is within bounds
+                                    }
                                     int v = static_cast<int>(std::floor((1.0f - ty) * texDim.y)) % texDim.y;
+                                    // Ensure v is within bounds and doesn't get moduled to 0
+                                    if (ty == 1) {
+                                        v = texDim.y - 1; // Ensure v is within bounds
+                                    }
+
                                     // Ensure u and v are non-negative
                                     u = (u + texDim.x) % texDim.x;
                                     v = (v + texDim.y) % texDim.y;
+   
+
 
                                     texCoordinate = glm::vec2(u, v);
 

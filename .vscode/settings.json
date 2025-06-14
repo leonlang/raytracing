@@ -53,6 +53,7 @@
         "vector": "cpp",
         "complex": "cpp",
         "algorithm": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "cstddef": "cpp"
     }
 }
