@@ -56,8 +56,8 @@ public:
     std::pair<float,glm::vec3> gridConstruction(const std::vector<Triangle> &triangles);
     glm::vec3 centralCoordinates(const Triangle &triangle);
     std::bitset<60> coordinateToMorton(glm::vec3 &coordinate);
-    std::vector<mortonTriangle> mortonCodes(const std::vector<Triangle> &triangles, float changeGridAmount);
-    Node* createTree(const std::vector<Triangle> &triangles);
+    std::vector<mortonTriangle> mortonCodes(const std::vector<Triangle> &triangles, float &changeGridAmount);
+    Node* createTree(const std::vector<Triangle> &triangles,float &changeGridAmount);
     
 };
 

@@ -172,15 +172,16 @@ int main()
 		auto startDatastructureInit = std::chrono::high_resolution_clock::now();
 
 		// Example Triangles
-		datastructure.fillTriangleNumbers(0, objManager.triangles.size() - 1);
+		// datastructure.fillTriangleNumbers(0, objManager.triangles.size() - 1);
 		datastructure.initDatastructure({objManager.triangles});
 
 		auto endDatastructureInit = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsedDatastructureInit = endDatastructureInit - startDatastructureInit;
-		std::cout << "Time taken for Datastrcture Initialization: " << elapsedDatastructureInit.count() << " seconds " << std::endl;
+		std::cout << "Time taken for Datastructure Initialization: " << elapsedDatastructureInit.count() << " seconds " << std::endl;
 		
 		auto start = std::chrono::high_resolution_clock::now();
 		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure, backgroundColor);
+
 		// End the timer
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsed = end - start;

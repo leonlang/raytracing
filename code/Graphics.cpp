@@ -70,8 +70,25 @@ namespace Graphics
             unsigned char *texData = objManager.textureData[triangle.textureName];
             glm::ivec2 texDim = objManager.textureDimensions[triangle.textureName];
 
-            size_t texIndex = (static_cast<int>(interpolatedTexCoordinate.y) * texDim.x + static_cast<int>(interpolatedTexCoordinate.x)) * 3;
-  
+            size_t texIndex = (static_cast<int>(std::max(0.0f, interpolatedTexCoordinate.y)) * texDim.x + static_cast<int>(std::max(0.0f, interpolatedTexCoordinate.x))) * 3; 
+            // Problem with interpolatedTexCoordinate.y is minus
+            if (interpolatedTexCoordinate.y < 10000000.0f)
+            {
+            std::cout << "interpolatedTexCoordinate: " << static_cast<int>(interpolatedTexCoordinate.y) << " TexDim: " << static_cast<int>(interpolatedTexCoordinate.x)  << std::endl;
+            std::cout << "TexIndex : " << texIndex << " TexDim: " << texDim.x << std::endl;
+            std::cout << " Triangle Texture Name: " << triangle.textureName << std::endl;
+            std::cout << "Triangle Color Coordinates: " << triangle.colorOneCoordinate.x << " " << triangle.colorTwoCoordinate.x << " " << triangle.colorThreeCoordinate.x << std::endl;
+            std::cout << "Triangle Color Coordinates: " << triangle.colorOneCoordinate.y << " " << triangle.colorTwoCoordinate.y << " " << triangle.colorThreeCoordinate.y << std::endl;
+            std::cout << "Barycentric Coordinates: " << calculateBarycentricCoords(triangle, intersectionPoint).x << " " << calculateBarycentricCoords(triangle, intersectionPoint).y << " " << calculateBarycentricCoords(triangle, intersectionPoint).z << std::endl;
+            std::cout << "Intersection Point: " << intersectionPoint.x << " " << intersectionPoint.y << " " << intersectionPoint.z << std::endl;
+            std::cout << "Triangle Point One: " << triangle.pointOne.x << " " << triangle.pointOne.y << " " << triangle.pointOne.z << std::endl;
+            std::cout << "Triangle Point Two: " << triangle.pointTwo.x << " " << triangle.pointTwo.y << " " << triangle.pointTwo.z << std::endl;
+            std::cout << "Triangle Point Three: " << triangle.pointThree.x << " " << triangle.pointThree.y << " " << triangle.pointThree.z << std::endl;
+            std::cout << " Ray Origin: " << ray.origin.x << " " << ray.origin.y << " " << ray.origin.z << std::endl;
+            std::cout << " Ray Direction: " << ray.direction.x << " " << ray.direction.y << " " << ray.direction.z << std::endl;
+            std::cout << "Distance: " << distance << std::endl;
+            }
+            
             objColor.x = texData[texIndex + 0] / 255.0f;
             objColor.y = texData[texIndex + 1] / 255.0f;
             objColor.z = texData[texIndex + 2] / 255.0f;

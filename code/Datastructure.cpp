@@ -28,8 +28,8 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     // glm::vec3 avgSize = lbvh.avgTriangleSize(triangles);
     // int gridSize = lbvh.gridSize(triangles);
     // std::cout << "Grid Size: " << gridSize << std::endl;
-    rootNode = lbvh.createTree(triangles);
-    
+    float changeGridAmount = 1.f;
+    rootNode = lbvh.createTree(triangles,changeGridAmount);
 }
 
 std::vector<int> Datastructure::checkIntersection(const Ray &ray)
@@ -199,7 +199,7 @@ std::pair<float,glm::vec3> Lbvh::gridConstruction(const std::vector<Triangle> &t
 
 }
 
-std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> &triangles,float changeGridAmount)
+std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> &triangles,float &changeGridAmount)
 {
     std::vector<mortonTriangle> mortonTriangles;
     std::pair<float, glm::vec3> gridPair = gridConstruction(triangles);
@@ -208,7 +208,7 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
     float avgTSize = avgTriangleSize(triangles) / changeGridAmount;
     int gridSize = static_cast<int>(std::ceil(gridPair.first / avgTSize));
 
-    std::cout << "Grid Size: " << gridSize << std::endl;
+    std::cout << "Grid size: " << gridSize << std::endl;
    // mortonTriangle mTriangle;
     // mTriangle.bits =  bits2;// Initialize with 24 bits
     for (int i = 0; i < triangles.size(); ++i)
@@ -254,12 +254,12 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
 
 
 
-Node* Lbvh::createTree(const std::vector<Triangle> &triangles)
+Node* Lbvh::createTree(const std::vector<Triangle> &triangles, float &changeGridAmount)
 {
     // std::pair<int, float> gridSizePair = gridSize(triangles);
     // Calculate the number of bits needed to represent the grid size
     // const size_t bits_needed = static_cast<size_t>(log2(gridSizePair.first)) + 1;
-    std::vector<mortonTriangle> mortonCodeTriangles  =  mortonCodes(triangles,100.f); // Get the morton code for the triangles
+    std::vector<mortonTriangle> mortonCodeTriangles  =  mortonCodes(triangles,changeGridAmount); // Get the morton code for the triangles
     std::vector<Node*> nodes; // Vector to hold the nodes of the tree
     for (const auto& mt : mortonCodeTriangles) {
         nodes.push_back(new Node(mt.index)); // Create a new node for each triangle and add it to the vector
@@ -325,7 +325,7 @@ Node* Lbvh::createTree(const std::vector<Triangle> &triangles)
         nodes = newNodes;
     }
 
-    std::cout << "Creating tree with " << triangles.size() << " triangles." << std::endl;
+    std::cout << "LBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
 
     Node* root = nodes[0]; // The last remaining node is the root of the tree
@@ -348,6 +348,7 @@ void Datastructure::nodeBoundingBoxIntersection(Node* node, const Ray& ray, std:
     if (!intersectRayAabb(ray, node->minBox, node->maxBox)) {
         return;
     }
+
 
     // Recurse for left and right children
     nodeBoundingBoxIntersection(node->left, ray, collectedIndices);
