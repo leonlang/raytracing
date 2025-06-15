@@ -170,7 +170,7 @@ namespace Scene
 
         imageSize = glm::vec2(1920, 1080);                   // Image Size
         lightPos = glm::vec4(500.0f, -300.0f, -200.f, 1.0f); // Light Position
-        objManager.loadObjFile("hairball", "./obj/hairball.obj");
+        objManager.loadObjFile("hairball", "./obj/hairball/hairball.obj");
         // objManager.transformTriangles("hairball", Transformation::rotateObjX(glm::radians(180.f)));
         // objManager.transformTriangles("hairball", Transformation::rotateObjY(glm::radians(0.f)));
         objManager.transformTriangles("hairball", Transformation::scaleObj(90.f, 90.f, 90.f));
@@ -268,13 +268,13 @@ namespace Scene
         objManager.transformTriangles("tree5", Transformation::scaleObj(1.5f, 1.5f, 1.5f));
         objManager.transformTriangles("tree5", Transformation::rotateObjX(glm::radians(-90.f)));
         objManager.transformTriangles("tree5", Transformation::rotateObjY(glm::radians(-270.f)));
-        objManager.transformTriangles("tree5", Transformation::changeObjPosition(glm::vec3(800, -80, -400)));
+        objManager.transformTriangles("tree5", Transformation::changeObjPosition(glm::vec3(810, -80, -420)));
 
         objManager.loadObjFile("tree8", "./obj/chestnut/chestnut.obj");
         objManager.transformTriangles("tree8", Transformation::scaleObj(1.5f, 1.5f, 1.5f));
         objManager.transformTriangles("tree8", Transformation::rotateObjX(glm::radians(-90.f)));
         objManager.transformTriangles("tree8", Transformation::rotateObjY(glm::radians(-270.f)));
-        objManager.transformTriangles("tree8", Transformation::changeObjPosition(glm::vec3(-800, -80, -400)));
+        objManager.transformTriangles("tree8", Transformation::changeObjPosition(glm::vec3(-800, -80, -420)));
 
         // Tree in Center
         objManager.loadObjFile("tree9", "./obj/chestnut/chestnut.obj");

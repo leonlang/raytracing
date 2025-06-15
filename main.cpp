@@ -105,10 +105,6 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 			// End the timer
 			auto endInitRay = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> elapsedInitRay = endInitRay - startInitRay;
-			if (elapsedInitRay.count() > 0.1)
-			{
-				std::cout << "Time taken for a single Ray: " << elapsedInitRay.count() << " seconds " << std::endl;
-			}
 
 
 
@@ -145,14 +141,10 @@ int main()
 		glm::vec4 lightPos;
 		glm::vec3 backgroundColor(0.f,0.f,0.f);
 
-		/* Lbvh lbvh;
-		glm::vec3 sampleCoordinate(65531.0f, 30000.0f, 1600.0f);
-		lbvh.coordinateToBits(sampleCoordinate);
-		*/
-
 		// Choose Szene
-		// szene1(objManager,viewMatrix,angleDegree,imageSize,lightPos);
 		Scene::forest(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
+
+
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
 		lightPos = glm::inverse(viewMatrix) * lightPos;

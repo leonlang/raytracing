@@ -13,4 +13,4 @@ CMakeUserPresets.json
 build/
 .DS_STORE
 images/generation
-obj/hairball.obj
+obj/hairball/hairball.obj

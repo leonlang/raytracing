@@ -185,6 +185,7 @@ float Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
         avgSize += size;
     }
     avgSize /= static_cast<float>(triangles.size());
+    // std::cout << "Average Triangle Size: " << avgSize.x << ", " << avgSize.y << ", " << avgSize.z << std::endl;
     return glm::compMax(avgSize);
 }
 

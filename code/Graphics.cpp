@@ -72,7 +72,7 @@ namespace Graphics
 
             size_t texIndex = (static_cast<int>(std::max(0.0f, interpolatedTexCoordinate.y)) * texDim.x + static_cast<int>(std::max(0.0f, interpolatedTexCoordinate.x))) * 3; 
             // Problem with interpolatedTexCoordinate.y is minus
-            if (interpolatedTexCoordinate.y < 10000000.0f)
+            /* if (interpolatedTexCoordinate.y < 10000000.0f)
             {
             std::cout << "interpolatedTexCoordinate: " << static_cast<int>(interpolatedTexCoordinate.y) << " TexDim: " << static_cast<int>(interpolatedTexCoordinate.x)  << std::endl;
             std::cout << "TexIndex : " << texIndex << " TexDim: " << texDim.x << std::endl;
@@ -87,7 +87,7 @@ namespace Graphics
             std::cout << " Ray Origin: " << ray.origin.x << " " << ray.origin.y << " " << ray.origin.z << std::endl;
             std::cout << " Ray Direction: " << ray.direction.x << " " << ray.direction.y << " " << ray.direction.z << std::endl;
             std::cout << "Distance: " << distance << std::endl;
-            }
+            } */
             
             objColor.x = texData[texIndex + 0] / 255.0f;
             objColor.y = texData[texIndex + 1] / 255.0f;
