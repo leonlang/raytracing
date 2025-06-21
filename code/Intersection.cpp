@@ -77,6 +77,8 @@ namespace Intersection
         }
         return false;
     }
+
+    /*
     std::vector<glm::vec3> generateUniformSphereDirections(int n)
     {
         std::vector<glm::vec3> directions;
@@ -122,6 +124,7 @@ namespace Intersection
 
         return occludedRays;
     }
+    */
 
     // Phong Shading
     // Concept for the Algorithm: https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates.html
