@@ -217,7 +217,7 @@ namespace Scene
         // viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, 0.0f, -circleZ), glm::vec3(glm::radians(0.0f), glm::radians(angleDegree), glm::radians(0.f)));
 
         imageSize = glm::vec2(1920, 1080);                   // Image Size
-        lightPos = glm::vec4(500.0f, -300.0f, -200.f, 1.0f); // Light Position
+        lightPos = glm::vec4(-5000.0f, -15000.0f, -20000.f, 1.0f); // Light Position
         // create 10 more trees in a loop for a forest-like scene
 
         objManager.loadObjFile("grass", "./obj/grass_rec/grass_rec.obj");

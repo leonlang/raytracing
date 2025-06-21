@@ -50,7 +50,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 			glm::vec3 color = Graphics::phongIllumination(objManager, objManager.triangles.at(k), ray, lightPos, fDistance);
 
 			// Check for Shadows
-			bool isShadow = false;
+			bool isShadow = true;
 			int shadowAmount = 0;
 			if (isShadow)
 			{
@@ -65,7 +65,20 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 						shadowAmount++;
 					};
 				}
+				color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
+				// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size());
 			}
+			bool isAmbientOcclusion = false;
+			int occlusionAmount = 0;
+			float occlusionDistance = 10.f; // Number of rays for ambient occlusion
+			if (isAmbientOcclusion)
+			{
+				// Ambient Occlusion
+				occlusionAmount = Intersection::ambientOcclusion(objManager, datastructure, lightPos, fDistance, ray, occlusionDistance);
+				// std::cout << "Ambient Occlusion: " << shadowAmount << std::endl;
+				color = color * (16.f - occlusionAmount) / 16.f;
+			}	
+
 			Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
 			// color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
 			colorPoint = glm::vec3(glm::ceil(color * 255.0f));			// Check if any point is over 255 and cout it
@@ -87,7 +100,7 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 	Ray ray(glm::vec3(0.0f, 0.0f, 100000.0f));
 	// glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
 	ImageData imageData;
-	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(1, 3.0f);
+	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(1, 500.0f);
 	for (int i = 0; i < imageSize.x; ++i)
 	{
 		for (int j = 0; j < imageSize.y; ++j)
