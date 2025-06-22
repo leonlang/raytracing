@@ -38,11 +38,11 @@ public:
     glm::vec3 maxBox;
     Node* rootNode; // Root node of the BVH tree
     void initDatastructure(const std::vector<Triangle> &triangles);
-    std::vector<int> checkIntersection(const Ray &ray);
+    std::vector<int> checkIntersection(const Ray &ray, int& boxCount);
     void createBoundingBox(const std::vector<Triangle> &triangles);
     void fillTriangleNumbers(int a, int b);
     bool intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, const glm::vec3 &maxBox);
-    void nodeBoundingBoxIntersection(Node* node, const Ray& ray, std::vector<int>& collectedIndices);
+    void nodeBoundingBoxIntersection(Node* node, const Ray& ray, std::vector<int>& collectedIndices, int& boxCount);
 
 };
 class Lbvh

@@ -32,7 +32,7 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     rootNode = lbvh.createTree(triangles,changeGridAmount);
 }
 
-std::vector<int> Datastructure::checkIntersection(const Ray &ray)
+std::vector<int> Datastructure::checkIntersection(const Ray &ray, int& boxCount)
 {
     // Datastructure 1: Simple intersection with one box which contains all triangles
 
@@ -40,7 +40,7 @@ std::vector<int> Datastructure::checkIntersection(const Ray &ray)
     // Traverse tree for Lbvh and ...
 
     std::vector<int> collectedIndices;
-    nodeBoundingBoxIntersection(rootNode, ray, collectedIndices);
+    nodeBoundingBoxIntersection(rootNode, ray, collectedIndices, boxCount);
     return collectedIndices;
 
 
@@ -336,8 +336,12 @@ Node* Lbvh::createTree(const std::vector<Triangle> &triangles, float &changeGrid
 }
 
 
-void Datastructure::nodeBoundingBoxIntersection(Node* node, const Ray& ray, std::vector<int>& collectedIndices) {
+void Datastructure::nodeBoundingBoxIntersection(Node* node, const Ray& ray, std::vector<int>& collectedIndices, int& boxCount) {
     if (!node) return; // Ensure node is valid
+
+    // Count this bounding box as traversed
+    ++boxCount;
+
 
     // If it's a leaf node containing a triangle, collect its index
     if (node->hasTriangles) {
@@ -352,6 +356,6 @@ void Datastructure::nodeBoundingBoxIntersection(Node* node, const Ray& ray, std:
 
 
     // Recurse for left and right children
-    nodeBoundingBoxIntersection(node->left, ray, collectedIndices);
-    nodeBoundingBoxIntersection(node->right, ray, collectedIndices);
+    nodeBoundingBoxIntersection(node->left, ray, collectedIndices, boxCount);
+    nodeBoundingBoxIntersection(node->right, ray, collectedIndices, boxCount);
 }

@@ -67,7 +67,8 @@ namespace Intersection
         // if (shadowObjFilename != currentObjFilename) {
         // for (int i = 0; i < triangles.size(); i++)
         // {
-        for (int k : datastructure.checkIntersection(shadowRay))
+        int boxCount = 0;
+        for (int k : datastructure.checkIntersection(shadowRay,boxCount))
         {
             float shadowDistance = Intersection::rayTriangleIntersection(shadowRay, triangles[k]);
             if (shadowDistance != -INFINITY && shadowDistance > 0.001f) // 0.001f is a small bias to avoid self-hit

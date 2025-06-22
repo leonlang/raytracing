@@ -27,7 +27,7 @@
 // and CImg: https://cimg.eu/ are used.
 
 // Combines the Methods for Data Hierarchies Triangle Intersection and Shadows
-glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastructure &datastructure, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates)
+glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastructure &datastructure, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates, int& boxCount)
 {
 	glm::vec3 colorPoint(0, 0, 0);
 	float distanceComparison = INFINITY;
@@ -38,7 +38,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 	// for (int k = 0; k < objManager.triangles.size(); k++)
 	//{
 	bool isIntersection = false;
-	for (int k : datastructure.checkIntersection(ray))
+	for (int k : datastructure.checkIntersection(ray, boxCount))
 	{
 		float fDistance = Intersection::rayTriangleIntersection(ray, objManager.triangles.at(k));
 
@@ -68,7 +68,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 				color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
 				// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size());
 			}
-			bool isAmbientOcclusion = false;
+			/* bool isAmbientOcclusion = false;
 			int occlusionAmount = 0;
 			float occlusionDistance = 10.f; // Number of rays for ambient occlusion
 			if (isAmbientOcclusion)
@@ -77,7 +77,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 				occlusionAmount = Intersection::ambientOcclusion(objManager, datastructure, lightPos, fDistance, ray, occlusionDistance);
 				// std::cout << "Ambient Occlusion: " << shadowAmount << std::endl;
 				color = color * (16.f - occlusionAmount) / 16.f;
-			}	
+			}	*/
 
 			Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
 			// color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
@@ -95,7 +95,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 // Sending out Rays
 // Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
 // Sends out Rays and returns the corresponding color for each pixel
-ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure, glm::vec3 backgroundColor)
+ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure, glm::vec3 backgroundColor, std::vector<int> &boxCounts)
 {
 	Ray ray(glm::vec3(0.0f, 0.0f, 100000.0f));
 	// glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
@@ -112,9 +112,10 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 
 			// Start the timer which checks how long it takes to send out a single ray
 			auto startInitRay = std::chrono::high_resolution_clock::now();
-
-			glm::vec3 colorPoint = computeColorPoint(ray, objManager, datastructure, lightPos, randomCoordinates);
-
+			int boxCount = 0; // Initialize boxCount to count the number of boxes checked during intersection
+			glm::vec3 colorPoint = computeColorPoint(ray, objManager, datastructure, lightPos, randomCoordinates, boxCount);
+			// Store the boxCount for this ray
+			boxCounts.push_back(boxCount);
 			// End the timer
 			auto endInitRay = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> elapsedInitRay = endInitRay - startInitRay;
@@ -155,7 +156,7 @@ int main()
 		glm::vec3 backgroundColor(0.f,0.f,0.f);
 
 		// Choose Szene
-		Scene::forest(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
+		Scene::hairball(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
 
 
 		// Transform the view matrix to the object space
@@ -185,7 +186,8 @@ int main()
 		std::cout << "Time taken for Datastructure Initialization: " << elapsedDatastructureInit.count() << " seconds " << std::endl;
 		
 		auto start = std::chrono::high_resolution_clock::now();
-		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure, backgroundColor);
+		std::vector<int> boxCounts; // Vector to store the number of boxes checked during intersection
+		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure, backgroundColor, boxCounts);
 
 		// End the timer
 		auto end = std::chrono::high_resolution_clock::now();
@@ -194,7 +196,15 @@ int main()
 
 		// Draw Image based on found Points
 		// drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
-		Graphics::drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
+		// Graphics::drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
+		// glm::vec3 heatmapColor = Graphics::getHeatmapColor(1000, 10000);
+		// std::cout << "Heatmap Color: " << heatmapColor.x << ", " << heatmapColor.y << ", " << heatmapColor.z << std::endl;
+		// std::vector<glm::vec3> heatmapColors = Graphics::convertToHeatmap(boxCounts, 10000);
+		// Store Image
+		Graphics::drawImage(imageSize, points.imagePoints, points.imageColors , std::to_string(int(angleDegree)), true, false);
+		// Store Heatmap Image
+		Graphics::drawImage(imageSize, points.imagePoints, Graphics::convertToHeatmap(boxCounts, 3000) , "_heatmap", true, false);
+
 		
 	}
 }

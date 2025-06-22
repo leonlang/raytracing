@@ -70,7 +70,7 @@ namespace Graphics
             unsigned char *texData = objManager.textureData[triangle.textureName];
             glm::ivec2 texDim = objManager.textureDimensions[triangle.textureName];
 
-            size_t texIndex = (static_cast<int>(std::max(0.0f, interpolatedTexCoordinate.y)) * texDim.x + static_cast<int>(std::max(0.0f, interpolatedTexCoordinate.x))) * 3; 
+            size_t texIndex = (static_cast<int>(std::max(0.0f, interpolatedTexCoordinate.y)) * texDim.x + static_cast<int>(std::max(0.0f, interpolatedTexCoordinate.x))) * 3;
             // Problem with interpolatedTexCoordinate.y is minus
             /* if (interpolatedTexCoordinate.y < 10000000.0f)
             {
@@ -88,7 +88,7 @@ namespace Graphics
             std::cout << " Ray Direction: " << ray.direction.x << " " << ray.direction.y << " " << ray.direction.z << std::endl;
             std::cout << "Distance: " << distance << std::endl;
             } */
-            
+
             objColor.x = texData[texIndex + 0] / 255.0f;
             objColor.y = texData[texIndex + 1] / 255.0f;
             objColor.z = texData[texIndex + 2] / 255.0f;
@@ -132,7 +132,7 @@ namespace Graphics
         // It is usually a small constant value added to ensure that objects are visible even when not directly lit
         // Higher AmbientStrenght = All of the Object brightens up more by the same amount
         glm::vec3 ambient = (1 / glm::pi<float>()) * triangle.ambient * objColor * lightColor;
-   
+
         // Calculate Specular Reflection
         // Specular reflection represents the mirror-like reflection of light sources on shiny surfaces
         // It does not use the object color (objectColor) because specular highlights are typically the color of the light source
@@ -146,7 +146,7 @@ namespace Graphics
         glm::vec3 specular = lightColor * triangle.specular * glm::max(dotProduct, 0.00f) * glm::pow(glm::max(glm::dot(r, v), 0.0f), triangle.shininess);
 
         // Combine the three components (diffuse, specular, and ambient) to get the final color
-        return diffuse + specular + ambient; 
+        return diffuse + specular + ambient;
     }
 
     glm::vec2 getTextureCoordinate(const glm::vec3 &barycentricCoords, const glm::vec2 &texCoordA, const glm::vec2 &texCoordB, const glm::vec2 &texCoordC)
@@ -193,8 +193,37 @@ namespace Graphics
         return coordinates;
     }
 
+    glm::vec3 getHeatmapColor(int value, int maxVal)
+    {
+        if (maxVal == 0)
+            return glm::vec3(0.0f, 0.0f, 1.0f); // Default to blue if maxVal is zero
+
+        float ratio = static_cast<float>(value) / static_cast<float>(maxVal);
+
+        // Calculate RGB values (each in the range [0, 1])
+        float r = std::min(1.0f, 2.0f * ratio);                           // Red channel increases with value
+        int r_i = glm::floor(r * 255.0f);
+        float g = std::min(1.0f, 2.0f * (1.0f - std::abs(ratio - 0.5f))); // Green peaks in the middle
+        int g_i = glm::floor(g * 255.0f);
+
+        float b = std::min(1.0f, 2.0f * (1.0f - ratio));                  // Blue channel decreases with value
+        int b_i = glm::floor(b * 255.0f);
+
+
+        // Color components: x = red, y = green, z = blue
+        return glm::vec3(r_i, g_i, b_i);
+    }
+    std::vector<glm::vec3> convertToHeatmap(const std::vector<int> &boxCounts, int maxVal)
+    {
+        std::vector<glm::vec3> heatmapColors;
+        for (const int &count : boxCounts)
+        {
+            heatmapColors.push_back(getHeatmapColor(count, maxVal));
+        }
+        return heatmapColors;
+    }
     void drawImage(const glm::vec2 &imgSize, const std::vector<glm::vec2> &imagePoints,
-                   const std::vector<glm::vec3> &imageColors, const int &angleDegree,
+                   const std::vector<glm::vec3> &imageColors, const std::string &angleDegree,
                    const bool &saveImage, const bool &displayImage)
     {
 
@@ -212,7 +241,7 @@ namespace Graphics
             img.draw_point(imagePoints[i].x, imagePoints[i].y, color);
         }
         // Generate image name based on angle
-        std::string imgName = "images/generation/output" + std::to_string(angleDegree) + ".bmp";
+        std::string imgName = "images/generation/output" + angleDegree + ".bmp";
 
         if (saveImage)
         {

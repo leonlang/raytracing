@@ -27,8 +27,11 @@ namespace Graphics
     void reinhardtToneMapping(glm::vec3 &color, float exposure, float gamma);
     std::vector<glm::vec3> generateRandomCoordinates(int amount, float range);
     void drawImage(const glm::vec2 &imgSize, const std::vector<glm::vec2> &imagePoints,
-                   const std::vector<glm::vec3> &imageColors, const int &angleDegree,
+                   const std::vector<glm::vec3> &imageColors, const std::string &angleDegree,
                    const bool &saveImage, const bool &displayImage);
+    glm::vec3 getHeatmapColor(int value, int maxVal);
+    std::vector<glm::vec3> convertToHeatmap(const std::vector<int> &boxCounts, int maxVal);
+
 }
 
 #endif // IMAGE_GENERATION_H
