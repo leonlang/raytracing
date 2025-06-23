@@ -100,7 +100,7 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 	Ray ray(glm::vec3(0.0f, 0.0f, 100000.0f));
 	// glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
 	ImageData imageData;
-	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(1, 500.0f);
+	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(128, 500.0f);
 	for (int i = 0; i < imageSize.x; ++i)
 	{
 		for (int j = 0; j < imageSize.y; ++j)
@@ -156,7 +156,7 @@ int main()
 		glm::vec3 backgroundColor(0.f,0.f,0.f);
 
 		// Choose Szene
-		Scene::hairball(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
+		Scene::forest(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
 
 
 		// Transform the view matrix to the object space
@@ -187,7 +187,10 @@ int main()
 		
 		auto start = std::chrono::high_resolution_clock::now();
 		std::vector<int> boxCounts; // Vector to store the number of boxes checked during intersection
+		// max value of boxCounts
 		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure, backgroundColor, boxCounts);
+		int maxBoxes = *std::max_element(boxCounts.begin(), boxCounts.end());
+		std::cout << "Max Box Count: " <<  maxBoxes << std::endl;
 
 		// End the timer
 		auto end = std::chrono::high_resolution_clock::now();
