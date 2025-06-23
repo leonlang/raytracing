@@ -25,6 +25,8 @@ namespace Scene
         glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
     void forest(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
         glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
+        void dragon(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
+        glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
 }
 
 #endif // SCENE1_H

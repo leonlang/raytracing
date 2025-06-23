@@ -195,9 +195,8 @@ namespace Graphics
 
     glm::vec3 getHeatmapColor(int value, int maxVal)
     {
-        if (maxVal == 0)
-            return glm::vec3(0.0f, 0.0f, 1.0f); // Default to blue if maxVal is zero
 
+        /*
         float ratio = static_cast<float>(value) / static_cast<float>(maxVal);
 
         // Calculate RGB values (each in the range [0, 1])
@@ -208,10 +207,39 @@ namespace Graphics
 
         float b = std::min(1.0f, 2.0f * (1.0f - ratio));                  // Blue channel decreases with value
         int b_i = glm::floor(b * 255.0f);
-
+        
 
         // Color components: x = red, y = green, z = blue
         return glm::vec3(r_i, g_i, b_i);
+        */
+
+        float ratio = static_cast<float>(value) / static_cast<float>(maxVal);
+        ratio = glm::clamp(ratio, 0.0f, 1.0f); // Ensure ratio stays in [0, 1]
+
+        // Map the ratio to a hue angle from 240° (blue) to 0° (red)
+        float hue = (1.0f - ratio) * 240.0f;
+
+        // Convert HSV to RGB (HSV: hue ∈ [0, 360], saturation = 1, value = 1)
+        float c = 1.0f;
+        float x = 1.0f - std::fabs(fmod(hue / 60.0f, 2) - 1.0f);
+        float m = 0.0f;
+        float r, g, b;
+
+        if (hue < 60)      { r = c; g = x; b = 0; }
+        else if (hue < 120){ r = x; g = c; b = 0; }
+        else if (hue < 180){ r = 0; g = c; b = x; }
+        else if (hue < 240){ r = 0; g = x; b = c; }
+        else              { r = x; g = 0; b = c; }
+
+        // Convert to 0–255 integer values
+        int r_i = glm::floor((r + m) * 255.0f);
+        int g_i = glm::floor((g + m) * 255.0f);
+        int b_i = glm::floor((b + m) * 255.0f);
+
+        return glm::vec3(r_i, g_i, b_i);
+
+        //return glm::vec3 (std::min(255,value/maxVal * 255),std::min(255,value/maxVal * 255),std::min(255,value/maxVal * 255));
+
     }
     std::vector<glm::vec3> convertToHeatmap(const std::vector<int> &boxCounts, int maxVal)
     {
