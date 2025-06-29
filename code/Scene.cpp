@@ -324,7 +324,6 @@ namespace Scene
         objManager.loadObjFile("sphere", "./obj/polo_ball/polo_ball.obj");
         objManager.transformTriangles("sphere", Transformation::scaleObj(25.f, 25.f,25.f));
         objManager.transformTriangles("sphere", Transformation::changeObjPosition(glm::vec3(0, -170, -250)));
-        
 
     }
 
@@ -356,6 +355,9 @@ namespace Scene
     void ambientOcclusionSphere(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
                 glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
     {
+        // To Implement for better Performance: go through all triangles and remove all which have a negative y value        
+
+
 
         float radius = 100000.0f;                         // Radius of the circle on which the camera moves
         float radians = glm::radians(angleDegree);        // Convert angle from degrees to radians

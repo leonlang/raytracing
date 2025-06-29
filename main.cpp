@@ -11,6 +11,7 @@
 
 // Import external libraries
 #include <iostream>
+#include <future>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -76,9 +77,9 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 					shadowAmount++;
 				};
 			}
-			color = color * (float(randomCoordinates.size() - shadowAmount)) / float(randomCoordinates.size());  //+ color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
-			// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 8.f / float(randomCoordinates.size());
-			// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size());
+			color = color * (float(randomCoordinates.size() - shadowAmount)) / float(randomCoordinates.size()); //+ color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
+																												// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 8.f / float(randomCoordinates.size());
+																												// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size());
 		}
 		Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
 		// color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
@@ -90,36 +91,72 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 // Sending out Rays
 // Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
 // Sends out Rays and returns the corresponding color for each pixel
-ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure, glm::vec3 &backgroundColor, std::vector<int> &boxCounts, std::vector<glm::vec3> &shadowPoints)
+ImageData sendRaysAndIntersectPointsColors(
+    const glm::vec2 &imageSize,
+    const glm::vec4 &lightPos,
+    ObjectManager &objManager,
+    Datastructure &datastructure,
+    glm::vec3 &backgroundColor,
+    std::vector<int> &boxCounts,
+    std::vector<glm::vec3> &shadowPoints)
 {
-	Ray ray(glm::vec3(0.0f, 0.0f, 100000.0f));
-	// glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
-	ImageData imageData;
-	// std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(1, 500.0f);
-	for (int i = 0; i < imageSize.x; ++i)
-	{
-		for (int j = 0; j < imageSize.y; ++j)
-		{
-			// ray.direction.x = i + rayXY.x - imageSize.x / 2;
-			// ray.direction.y = j + rayXY.y - imageSize.y / 2;
-			ray.direction.x = i - imageSize.x / 2;
-			ray.direction.y = j - imageSize.y / 2;
+    const glm::vec3 lightPosition(lightPos.x, lightPos.y, lightPos.z);
 
-			// Start the timer which checks how long it takes to send out a single ray
-			auto startInitRay = std::chrono::high_resolution_clock::now();
-			int boxCount = 0; // Initialize boxCount to count the number of boxes checked during intersection
-			glm::vec3 colorPoint = computeColorPoint(ray, objManager, datastructure, lightPos, shadowPoints, boxCount,backgroundColor);
-			// Store the boxCount for this ray
-			boxCounts.push_back(boxCount);
-			// End the timer
-			auto endInitRay = std::chrono::high_resolution_clock::now();
-			std::chrono::duration<double> elapsedInitRay = endInitRay - startInitRay;
-			imageData.imagePoints.push_back(glm::vec2(i, j));
-			imageData.imageColors.push_back(colorPoint);
-		}
-	}
-	return imageData;
+    ImageData imageData;
+	// specify how many threads the hardware should use.
+	// If you specify more threads than available cores, the hardware will run at max and possibly everything else will run slower or crash.
+	// I would recommend half the number of threads as available cores.
+    const int numThreads = std::thread::hardware_concurrency() / 2;
+    std::vector<std::thread> threads;
+	// store the results I get from each thread in a vector
+    std::vector<std::vector<std::tuple<glm::vec2, glm::vec3, int>>> threadResults(numThreads);
+
+	// go through number of specified threads
+    for (int t = 0; t < numThreads; ++t)
+    {
+        threads.emplace_back([=, &objManager, &datastructure, &backgroundColor, &shadowPoints, &threadResults]() {
+            int start = t * imageSize.x / numThreads;
+            int end = (t + 1) * imageSize.x / numThreads;
+
+			// Each thread can store its own results in his own vector. This has the advantage that we don't have to use a mutex for each pixel, which would reduce performance.
+            std::vector<std::tuple<glm::vec2, glm::vec3, int>> localResults;
+
+            for (int i = start; i < end; ++i)
+            {
+                for (int j = 0; j < imageSize.y; ++j)
+                {
+                    Ray ray(glm::vec3(0.0f, 0.0f, 100000.0f));
+                    ray.direction.x = i - imageSize.x / 2.0f;
+                    ray.direction.y = j - imageSize.y / 2.0f;
+
+                    int boxCount = 0;
+                    glm::vec3 color = computeColorPoint(ray, objManager, datastructure, lightPosition, shadowPoints, boxCount, backgroundColor);
+
+                    localResults.emplace_back(glm::vec2(i, j), color, boxCount);
+                }
+            }
+
+            threadResults[t] = std::move(localResults);
+        });
+    }
+
+    for (auto &t : threads)
+        t.join();
+
+    for (const auto &threadVec : threadResults)
+    {
+        for (const auto &[point, color, count] : threadVec)
+        {
+            imageData.imagePoints.push_back(point);
+            imageData.imageColors.push_back(color);
+            boxCounts.push_back(count);
+        }
+    }
+
+    return imageData;
 }
+
+
 
 int main()
 {
@@ -143,7 +180,7 @@ int main()
 		std::vector<glm::vec3> shadowPointsAO = Graphics::ambientOcclusionShadowPoints(); // Get the shadow points for ambient occlusion
 
 		// Choose Szene
-		Scene::sphere(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
+		Scene::forest(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
 
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));

@@ -54,6 +54,9 @@
         "complex": "cpp",
         "algorithm": "cpp",
         "memory": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "future": "cpp",
+        "chrono": "cpp",
+        "tuple": "cpp"
     }
 }
