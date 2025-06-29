@@ -14,3 +14,4 @@ build/
 .DS_STORE
 images/generation
 obj/hairball/hairball.obj
+obj/bistro

@@ -62,7 +62,7 @@ namespace Intersection
         // const std::vector<Triangle>& trianglesBox = pairShadow.second;
         Ray shadowRay(lightPos - ray.direction * fDistance);
         shadowRay.origin = ray.direction * fDistance; // - lightPos * 0.001f; // bias to avoid self-hit
-                auto end = std::chrono::high_resolution_clock::now();
+        auto end = std::chrono::high_resolution_clock::now();
 
         // shadowRay.origin += ray.direction * 0.001f; // add small value to prevent shadowAcne
         // Prevents intersection between same object
@@ -70,11 +70,11 @@ namespace Intersection
         // for (int i = 0; i < triangles.size(); i++)
         // {
         int boxCount = 0;
-        for (int k : datastructure.checkIntersection(shadowRay,boxCount))
+        for (int k : datastructure.checkIntersection(shadowRay, boxCount))
         {
             float shadowDistance = Intersection::rayTriangleIntersection(shadowRay, triangles[k]);
             // if (shadowDistance != -INFINITY && shadowDistance > 0.001f) // 0.001f is a small bias to avoid self-hit
-             if (shadowDistance != -INFINITY && shadowDistance > 0.00000007f && shadowDistance < 0.00000175f) // 0.001f is a small bias to avoid self-hit
+            if (shadowDistance != -INFINITY && shadowDistance > 0.00000007f && shadowDistance < 0.00000175f) // 0.001f is a small bias to avoid self-hit
             {
                 return true;
             }

@@ -59,7 +59,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 		color = Graphics::phongIllumination(objManager, objManager.triangles.at(lastIntersectionNumber), ray, lightPos, distanceComparison);
 
 		// Check for Shadows
-		bool isShadow = true;
+		bool isShadow = false;
 		int shadowAmount = 0;
 		if (isShadow)
 		{
@@ -76,7 +76,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 					shadowAmount++;
 				};
 			}
-			color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
+			color = color * (float(randomCoordinates.size() - shadowAmount)) / float(randomCoordinates.size());  //+ color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
 			// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 8.f / float(randomCoordinates.size());
 			// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size());
 		}
