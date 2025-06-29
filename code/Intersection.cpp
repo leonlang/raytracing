@@ -62,6 +62,8 @@ namespace Intersection
         // const std::vector<Triangle>& trianglesBox = pairShadow.second;
         Ray shadowRay(lightPos - ray.direction * fDistance);
         shadowRay.origin = ray.direction * fDistance; // - lightPos * 0.001f; // bias to avoid self-hit
+                auto end = std::chrono::high_resolution_clock::now();
+
         // shadowRay.origin += ray.direction * 0.001f; // add small value to prevent shadowAcne
         // Prevents intersection between same object
         // if (shadowObjFilename != currentObjFilename) {
@@ -71,61 +73,14 @@ namespace Intersection
         for (int k : datastructure.checkIntersection(shadowRay,boxCount))
         {
             float shadowDistance = Intersection::rayTriangleIntersection(shadowRay, triangles[k]);
-            if (shadowDistance != -INFINITY && shadowDistance > 0.001f) // 0.001f is a small bias to avoid self-hit
+            // if (shadowDistance != -INFINITY && shadowDistance > 0.001f) // 0.001f is a small bias to avoid self-hit
+             if (shadowDistance != -INFINITY && shadowDistance > 0.00000007f && shadowDistance < 0.00000175f) // 0.001f is a small bias to avoid self-hit
             {
                 return true;
             }
         }
         return false;
     }
-
-    /*
-    std::vector<glm::vec3> generateUniformSphereDirections(int n)
-    {
-        std::vector<glm::vec3> directions;
-        const float phi = glm::pi<float>() * (3.0f - std::sqrt(5.0f)); // golden angle in radians
-
-        for (int i = 0; i < n; ++i)
-        {
-            float y = 1.0f - (i / float(n - 1)) * 2.0f; // y goes from 1 to -1
-            float radius = std::sqrt(1.0f - y * y);     // radius at y
-
-            float theta = phi * i; // golden angle increment
-
-            float x = std::cos(theta) * radius;
-            float z = std::sin(theta) * radius;
-
-            directions.emplace_back(glm::vec3(x, y, z));
-        }
-
-        return directions;
-    }
-
-    int ambientOcclusion(ObjectManager &objManager, Datastructure &datastructure, const glm::vec3 &lightPos, const float &fDistance, const Ray &ray, float &occlusionDistance)
-    {
-        const std::vector<Triangle> &triangles = objManager.triangles;
-        auto directions = generateUniformSphereDirections(16);
-        int occludedRays = 0;
-        for (const glm::vec3 &dir : directions)
-        {
-            Ray shadowRay(dir);
-            shadowRay.origin = ray.direction * fDistance + dir * 0.001f; // bias to avoid self-hit
-            // shadowRay.direction = dir;
-
-            for (int k : datastructure.checkIntersection(shadowRay))
-            {
-                float dist = Intersection::rayTriangleIntersection(shadowRay, triangles[k]);
-                if (dist != -INFINITY && dist < occlusionDistance)
-                {
-                    ++occludedRays;
-                    break;
-                }
-            }
-        } 
-
-        return occludedRays;
-    }
-    */
 
     // Phong Shading
     // Concept for the Algorithm: https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates.html

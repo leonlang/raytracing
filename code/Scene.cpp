@@ -216,7 +216,7 @@ namespace Scene
         viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, lookDownY, -circleZ), glm::vec3(glm::radians(lookDownAngle), glm::radians(angleDegree), glm::radians(0.f)));
         // viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, 0.0f, -circleZ), glm::vec3(glm::radians(0.0f), glm::radians(angleDegree), glm::radians(0.f)));
 
-        imageSize = glm::vec2(1920, 1080);                   // Image Size
+        imageSize = glm::vec2(1920, 1080);                         // Image Size
         lightPos = glm::vec4(-5000.0f, -15000.0f, -20000.f, 1.0f); // Light Position
         // create 10 more trees in a loop for a forest-like scene
 
@@ -290,8 +290,46 @@ namespace Scene
         objManager.transformTriangles("hairball", Transformation::changeObjPosition(glm::vec3(0.f, 50.f, 250.f)));  */
     }
 
-        void dragon(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
-                  glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
+
+        void sphere(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
+                glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
+    {
+        float radius = 100000.f;                          // Radius of the circle on which the camera moves
+        float radians = glm::radians(angleDegree);        // Convert angle from degrees to radians
+        float circleX = radius * std::sin(radians);       // Calculate x coordinate on the circle
+        float circleZ = radius * std::cos(radians);       // Calculate z coordinate on the circle
+        backgroundColor = glm::vec3(135.f, 206.f, 235.f); // Background Color
+
+        // for each degree low down increase lookDownY by 2000
+        float lookDownAngle = 25.f; // Angle to look down
+        float lookDownY = -47000.f; // Y position to look down from
+        viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, lookDownY, -circleZ), glm::vec3(glm::radians(lookDownAngle), glm::radians(angleDegree), glm::radians(0.f)));
+        // viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, 0.0f, -circleZ), glm::vec3(glm::radians(0.0f), glm::radians(angleDegree), glm::radians(0.f)));
+
+        imageSize = glm::vec2(1920, 1080);                         // Image Size
+        lightPos = glm::vec4(-5000.0f, -15000.0f, -20000.f, 1.0f); // Light Position
+        // create 10 more trees in a loop for a forest-like scene
+
+        objManager.loadObjFile("cube", "./obj/cube.obj");
+        // objManager.transformTriangles("grass", Transformation::rotateObjX(glm::radians(-90.f)));
+        objManager.transformTriangles("cube", Transformation::scaleObj(1500.f, 50.f, 1000.f));
+        // objManager.transformTriangles("grass", Transformation::changeObjPosition(glm::vec3(0.f, -90.f, -400.f)));
+
+
+        objManager.loadObjFile("sphere", "./obj/sphere.obj");
+        objManager.transformTriangles("sphere", Transformation::scaleObj(50.f, 50.f,50.f));
+        objManager.transformTriangles("sphere", Transformation::changeObjPosition(glm::vec3(0, -170, -250)));
+
+        /*
+        objManager.loadObjFile("sphere", "./obj/polo_ball/polo_ball.obj");
+        objManager.transformTriangles("sphere", Transformation::scaleObj(25.f, 25.f,25.f));
+        objManager.transformTriangles("sphere", Transformation::changeObjPosition(glm::vec3(0, -170, -250)));
+        */
+
+    }
+
+    void dragon(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
+                glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
     {
 
         float radius = 100000.0f;                         // Radius of the circle on which the camera moves
@@ -301,18 +339,40 @@ namespace Scene
         backgroundColor = glm::vec3(200.f, 200.f, 200.f); // Background Color
         viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, 0.0f, -circleZ), glm::vec3(glm::radians(0.0f), glm::radians(angleDegree), glm::radians(0.f)));
 
-        imageSize = glm::vec2(1920, 1080);                   // Image Size
+        imageSize = glm::vec2(1920, 1080);                         // Image Size
         lightPos = glm::vec4(-5000.0f, -15000.0f, -20000.f, 1.0f); // Light Position
         objManager.loadObjFile("dragon", "./obj/dragon/dragon.obj");
         objManager.transformTriangles("dragon", Transformation::scaleObj(1000.f, 1000.f, 1000.f));
         objManager.transformTriangles("dragon", Transformation::rotateObjX(glm::radians(-180.f)));
         objManager.transformTriangles("dragon", Transformation::rotateObjY(glm::radians(90.f)));
-         
-
 
         // objManager.transformTriangles("hairball", Transformation::rotateObjX(glm::radians(180.f)));
         // objManager.transformTriangles("hairball", Transformation::rotateObjY(glm::radians(0.f)));
         // objManager.transformTriangles("hairball", Transformation::scaleObj(90.f, 90.f, 90.f));
         // objManager.transformTriangles("hairball", Transformation::changeObjPosition(glm::vec3(0.f, 50.f, 250.f)));
     }
+
+    void ambientOcclusionSphere(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
+                glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
+    {
+
+        float radius = 100000.0f;                         // Radius of the circle on which the camera moves
+        float radians = glm::radians(angleDegree);        // Convert angle from degrees to radians
+        float circleX = radius * std::sin(radians);       // Calculate x coordinate on the circle
+        float circleZ = radius * std::cos(radians);       // Calculate z coordinate on the circle
+        backgroundColor = glm::vec3(200.f, 200.f, 200.f); // Background Color
+        viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, 0.0f, -circleZ), glm::vec3(glm::radians(0.0f), glm::radians(angleDegree), glm::radians(0.f)));
+
+        imageSize = glm::vec2(1920, 1080);                         // Image Size
+        lightPos = glm::vec4(-5000.0f, -15000.0f, -20000.f, 1.0f); // Light Position
+        // objManager.loadObjFile("sphere", "./obj/sphere.obj");
+        objManager.loadObjFile("sphere", "./obj/sphere.obj");
+        objManager.transformTriangles("sphere", Transformation::scaleObj(10000000.f, 10000000.f, 10000000.f));
+
+        // objManager.transformTriangles("hairball", Transformation::rotateObjX(glm::radians(180.f)));
+        // objManager.transformTriangles("hairball", Transformation::rotateObjY(glm::radians(0.f)));
+        // objManager.transformTriangles("hairball", Transformation::scaleObj(90.f, 90.f, 90.f));
+        // objManager.transformTriangles("hairball", Transformation::changeObjPosition(glm::vec3(0.f, 50.f, 250.f)));
+    }
+
 }

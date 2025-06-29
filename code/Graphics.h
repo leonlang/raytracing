@@ -26,6 +26,8 @@ namespace Graphics
                                    const glm::vec2 &texCoordC);
     void reinhardtToneMapping(glm::vec3 &color, float exposure, float gamma);
     std::vector<glm::vec3> generateRandomCoordinates(int amount, float range);
+    std::vector<glm::vec3> convertTriangleToShadowPoints(const ObjectManager &objManager);
+    std::vector<glm::vec3> ambientOcclusionShadowPoints();
     void drawImage(const glm::vec2 &imgSize, const std::vector<glm::vec2> &imagePoints,
                    const std::vector<glm::vec3> &imageColors, const std::string &angleDegree,
                    const bool &saveImage, const bool &displayImage);

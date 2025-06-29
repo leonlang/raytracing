@@ -1,5 +1,5 @@
 #include "Graphics.h"
-
+#include "Scene.h"
 namespace Graphics
 {
 
@@ -192,6 +192,31 @@ namespace Graphics
         }
         return coordinates;
     }
+    std::vector<glm::vec3> ambientOcclusionShadowPoints()
+    {
+        // Create an ObjectManager instance for ambient occlusion sphere
+        glm::mat4 viewMatrixAO;
+        ObjectManager objManagerAO;
+        glm::vec2 imageSizeAO;
+        glm::vec4 lightPosAO;
+        glm::vec3 backgroundColorAO(0.f, 0.f, 0.f);
+        Scene::ambientOcclusionSphere(objManagerAO, viewMatrixAO, 0, imageSizeAO, lightPosAO, backgroundColorAO);
+        std::vector<glm::vec3> shadowPoints;
+        shadowPoints = convertTriangleToShadowPoints(objManagerAO);
+        return shadowPoints;
+    }
+    std::vector<glm::vec3> convertTriangleToShadowPoints(const ObjectManager &objManager)
+    {
+
+        // Iterate through all triangles in the object manager
+        std::vector<glm::vec3> shadowPoints;
+        for (const auto &triangle : objManager.triangles)
+        {
+            shadowPoints.push_back(triangle.pointOne);
+            // Create a ray from the light position to the triangle's centroid
+        }
+        return shadowPoints;
+    }
 
     glm::vec3 getHeatmapColor(int value, int maxVal)
     {
@@ -207,7 +232,7 @@ namespace Graphics
 
         float b = std::min(1.0f, 2.0f * (1.0f - ratio));                  // Blue channel decreases with value
         int b_i = glm::floor(b * 255.0f);
-        
+
 
         // Color components: x = red, y = green, z = blue
         return glm::vec3(r_i, g_i, b_i);
@@ -225,11 +250,36 @@ namespace Graphics
         float m = 0.0f;
         float r, g, b;
 
-        if (hue < 60)      { r = c; g = x; b = 0; }
-        else if (hue < 120){ r = x; g = c; b = 0; }
-        else if (hue < 180){ r = 0; g = c; b = x; }
-        else if (hue < 240){ r = 0; g = x; b = c; }
-        else              { r = x; g = 0; b = c; }
+        if (hue < 60)
+        {
+            r = c;
+            g = x;
+            b = 0;
+        }
+        else if (hue < 120)
+        {
+            r = x;
+            g = c;
+            b = 0;
+        }
+        else if (hue < 180)
+        {
+            r = 0;
+            g = c;
+            b = x;
+        }
+        else if (hue < 240)
+        {
+            r = 0;
+            g = x;
+            b = c;
+        }
+        else
+        {
+            r = x;
+            g = 0;
+            b = c;
+        }
 
         // Convert to 0–255 integer values
         int r_i = glm::floor((r + m) * 255.0f);
@@ -238,8 +288,7 @@ namespace Graphics
 
         return glm::vec3(r_i, g_i, b_i);
 
-        //return glm::vec3 (std::min(255,value/maxVal * 255),std::min(255,value/maxVal * 255),std::min(255,value/maxVal * 255));
-
+        // return glm::vec3 (std::min(255,value/maxVal * 255),std::min(255,value/maxVal * 255),std::min(255,value/maxVal * 255));
     }
     std::vector<glm::vec3> convertToHeatmap(const std::vector<int> &boxCounts, int maxVal)
     {

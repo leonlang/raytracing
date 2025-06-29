@@ -27,17 +27,16 @@
 // and CImg: https://cimg.eu/ are used.
 
 // Combines the Methods for Data Hierarchies Triangle Intersection and Shadows
-glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastructure &datastructure, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates, int& boxCount)
+glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastructure &datastructure, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates, int &boxCount)
 {
 	glm::vec3 colorPoint(0, 0, 0);
 	float distanceComparison = INFINITY;
-	// Add data hierarchies here. They should result a vector
+	bool isIntersection = false;
+	glm::vec3 color(0.f, 0.f, 0.f);
+	int lastIntersectionNumber = 0;
+	// Added data hierarchies here. They should result a vector
 	// which contains the indexes of the triangles which are left
 	// The for looop goes through those triangles
-
-	// for (int k = 0; k < objManager.triangles.size(); k++)
-	//{
-	bool isIntersection = false;
 	for (int k : datastructure.checkIntersection(ray, boxCount))
 	{
 		float fDistance = Intersection::rayTriangleIntersection(ray, objManager.triangles.at(k));
@@ -45,43 +44,9 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 		// Ray has hit the triangle
 		if (fDistance != -INFINITY && fDistance < distanceComparison)
 		{
+			lastIntersectionNumber = k;
 			isIntersection = true;
 			distanceComparison = fDistance;
-			glm::vec3 color = Graphics::phongIllumination(objManager, objManager.triangles.at(k), ray, lightPos, fDistance);
-
-			// Check for Shadows
-			bool isShadow = true;
-			int shadowAmount = 0;
-			if (isShadow)
-			{
-				for (const glm::vec3 &point : randomCoordinates)
-				{
-					glm::vec3 lightPosChanged = lightPos + point;
-					// Add data hierarchies here. They should result a vector
-					// which contains the indexes of the triangles which are left
-					// The for looop goes through those triangles
-					if (Intersection::shadowIntersection(objManager, datastructure, lightPosChanged, fDistance, ray))
-					{
-						shadowAmount++;
-					};
-				}
-				color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
-				// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size());
-			}
-			/* bool isAmbientOcclusion = false;
-			int occlusionAmount = 0;
-			float occlusionDistance = 10.f; // Number of rays for ambient occlusion
-			if (isAmbientOcclusion)
-			{
-				// Ambient Occlusion
-				occlusionAmount = Intersection::ambientOcclusion(objManager, datastructure, lightPos, fDistance, ray, occlusionDistance);
-				// std::cout << "Ambient Occlusion: " << shadowAmount << std::endl;
-				color = color * (16.f - occlusionAmount) / 16.f;
-			}	*/
-
-			Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
-			// color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
-			colorPoint = glm::vec3(glm::ceil(color * 255.0f));			// Check if any point is over 255 and cout it
 		}
 	}
 	// If no intersection was found, set the colorPoint to -1 so we can color it as background
@@ -89,18 +54,48 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 	{
 		colorPoint = glm::vec3(-1.f); // No intersection found
 	}
+	else
+	{
+		color = Graphics::phongIllumination(objManager, objManager.triangles.at(lastIntersectionNumber), ray, lightPos, distanceComparison);
+
+		// Check for Shadows
+		bool isShadow = true;
+		int shadowAmount = 0;
+		if (isShadow)
+		{
+			for (const glm::vec3 &point : randomCoordinates)
+			{
+				glm::vec3 lightPosChanged = lightPos + point;
+				// Added data hierarchies here. They should result a vector
+				// which contains the indexes of the triangles which are left
+				// The for looop goes through those triangles
+				if (Intersection::shadowIntersection(objManager, datastructure, lightPosChanged, distanceComparison, ray))
+
+				// if (Intersection::shadowIntersection(objManager, datastructure, point, fDistance, ray))
+				{
+					shadowAmount++;
+				};
+			}
+			color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
+			// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 8.f / float(randomCoordinates.size());
+			// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size());
+		}
+		Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
+		// color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
+		colorPoint = glm::vec3(glm::ceil(color * 255.0f)); // Check if any point is over 255 and cout it
+	}
 	return colorPoint;
 }
 
 // Sending out Rays
 // Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
 // Sends out Rays and returns the corresponding color for each pixel
-ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure, glm::vec3 backgroundColor, std::vector<int> &boxCounts)
+ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure, glm::vec3 backgroundColor, std::vector<int> &boxCounts, std::vector<glm::vec3> shadowPoints)
 {
 	Ray ray(glm::vec3(0.0f, 0.0f, 100000.0f));
 	// glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
 	ImageData imageData;
-	std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(128, 500.0f);
+	// std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(1, 500.0f);
 	for (int i = 0; i < imageSize.x; ++i)
 	{
 		for (int j = 0; j < imageSize.y; ++j)
@@ -113,14 +108,12 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 			// Start the timer which checks how long it takes to send out a single ray
 			auto startInitRay = std::chrono::high_resolution_clock::now();
 			int boxCount = 0; // Initialize boxCount to count the number of boxes checked during intersection
-			glm::vec3 colorPoint = computeColorPoint(ray, objManager, datastructure, lightPos, randomCoordinates, boxCount);
+			glm::vec3 colorPoint = computeColorPoint(ray, objManager, datastructure, lightPos, shadowPoints, boxCount);
 			// Store the boxCount for this ray
 			boxCounts.push_back(boxCount);
 			// End the timer
 			auto endInitRay = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> elapsedInitRay = endInitRay - startInitRay;
-
-
 
 			// If no intersection was found, the colorPoint is set to -1 so we can color it as background
 			if (colorPoint == glm::vec3(-1.f))
@@ -130,8 +123,6 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 			}
 			imageData.imagePoints.push_back(glm::vec2(i, j));
 			imageData.imageColors.push_back(colorPoint);
-
-
 		}
 	}
 	return imageData;
@@ -139,6 +130,7 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 
 int main()
 {
+	// Choose Szene
 
 	// save images at different degrees based on camera
 	for (float angleDegree = 0; angleDegree < 360; angleDegree = angleDegree + 400)
@@ -153,11 +145,12 @@ int main()
 		Datastructure datastructure;
 		glm::vec2 imageSize;
 		glm::vec4 lightPos;
-		glm::vec3 backgroundColor(0.f,0.f,0.f);
+		glm::vec3 backgroundColor(0.f, 0.f, 0.f);
+		std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(2, 500.0f);
+		std::vector<glm::vec3> shadowPointsAO = Graphics::ambientOcclusionShadowPoints(); // Get the shadow points for ambient occlusion
 
 		// Choose Szene
-		Scene::forest(objManager, viewMatrix, angleDegree, imageSize, lightPos,backgroundColor);
-
+		Scene::sphere(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
 
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
@@ -184,13 +177,13 @@ int main()
 		auto endDatastructureInit = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsedDatastructureInit = endDatastructureInit - startDatastructureInit;
 		std::cout << "Time taken for Datastructure Initialization: " << elapsedDatastructureInit.count() << " seconds " << std::endl;
-		
+
 		auto start = std::chrono::high_resolution_clock::now();
 		std::vector<int> boxCounts; // Vector to store the number of boxes checked during intersection
 		// max value of boxCounts
-		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure, backgroundColor, boxCounts);
+		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure, backgroundColor, boxCounts, shadowPointsAO);
 		int maxBoxes = *std::max_element(boxCounts.begin(), boxCounts.end());
-		std::cout << "Max Box Count: " <<  maxBoxes << std::endl;
+		std::cout << "Max Box Count: " << maxBoxes << std::endl;
 
 		// End the timer
 		auto end = std::chrono::high_resolution_clock::now();
@@ -204,10 +197,8 @@ int main()
 		// std::cout << "Heatmap Color: " << heatmapColor.x << ", " << heatmapColor.y << ", " << heatmapColor.z << std::endl;
 		// std::vector<glm::vec3> heatmapColors = Graphics::convertToHeatmap(boxCounts, 10000);
 		// Store Image
-		Graphics::drawImage(imageSize, points.imagePoints, points.imageColors , std::to_string(int(angleDegree)), true, false);
+		Graphics::drawImage(imageSize, points.imagePoints, points.imageColors, std::to_string(int(angleDegree)), true, false);
 		// Store Heatmap Image
-		Graphics::drawImage(imageSize, points.imagePoints, Graphics::convertToHeatmap(boxCounts, 3000) , "_heatmap", true, false);
-
-		
+		Graphics::drawImage(imageSize, points.imagePoints, Graphics::convertToHeatmap(boxCounts, 3000), "_heatmap", true, false);
 	}
 }
