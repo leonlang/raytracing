@@ -27,7 +27,7 @@
 // and CImg: https://cimg.eu/ are used.
 
 // Combines the Methods for Data Hierarchies Triangle Intersection and Shadows
-glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastructure &datastructure, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates, int &boxCount)
+glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastructure &datastructure, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates, int &boxCount, glm::vec3 &backgroundColor)
 {
 	glm::vec3 colorPoint(0, 0, 0);
 	float distanceComparison = INFINITY;
@@ -52,7 +52,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 	// If no intersection was found, set the colorPoint to -1 so we can color it as background
 	if (!isIntersection)
 	{
-		colorPoint = glm::vec3(-1.f); // No intersection found
+		colorPoint = backgroundColor; // No intersection found
 	}
 	else
 	{
@@ -90,7 +90,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 // Sending out Rays
 // Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
 // Sends out Rays and returns the corresponding color for each pixel
-ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure, glm::vec3 backgroundColor, std::vector<int> &boxCounts, std::vector<glm::vec3> shadowPoints)
+ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm::vec4 &lightPos, ObjectManager &objManager, Datastructure &datastructure, glm::vec3 &backgroundColor, std::vector<int> &boxCounts, std::vector<glm::vec3> &shadowPoints)
 {
 	Ray ray(glm::vec3(0.0f, 0.0f, 100000.0f));
 	// glm::vec2 rayXY = glm::vec2(ray.direction.x, ray.direction.y);
@@ -108,19 +108,12 @@ ImageData sendRaysAndIntersectPointsColors(const glm::vec2 &imageSize, const glm
 			// Start the timer which checks how long it takes to send out a single ray
 			auto startInitRay = std::chrono::high_resolution_clock::now();
 			int boxCount = 0; // Initialize boxCount to count the number of boxes checked during intersection
-			glm::vec3 colorPoint = computeColorPoint(ray, objManager, datastructure, lightPos, shadowPoints, boxCount);
+			glm::vec3 colorPoint = computeColorPoint(ray, objManager, datastructure, lightPos, shadowPoints, boxCount,backgroundColor);
 			// Store the boxCount for this ray
 			boxCounts.push_back(boxCount);
 			// End the timer
 			auto endInitRay = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> elapsedInitRay = endInitRay - startInitRay;
-
-			// If no intersection was found, the colorPoint is set to -1 so we can color it as background
-			if (colorPoint == glm::vec3(-1.f))
-			{
-				// colorPoint = glm::vec3(173, 216, 230); // Background color
-				colorPoint = backgroundColor; // glm::vec3(20, 20, 20); // Background color
-			}
 			imageData.imagePoints.push_back(glm::vec2(i, j));
 			imageData.imageColors.push_back(colorPoint);
 		}
