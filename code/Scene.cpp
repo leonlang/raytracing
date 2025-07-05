@@ -368,8 +368,8 @@ namespace Scene
 
         imageSize = glm::vec2(1920, 1080);                         // Image Size
         lightPos = glm::vec4(-5000.0f, -15000.0f, -20000.f, 1.0f); // Light Position
-        objManager.loadObjFile("sphere", "./obj/sphere.obj");
-        // objManager.loadObjFile("sphere", "./obj/simplify_sphere_160.obj");
+        // objManager.loadObjFile("sphere", "./obj/sphere.obj");
+        objManager.loadObjFile("sphere", "./obj/simplify_sphere_160.obj");
         objManager.transformTriangles("sphere", Transformation::scaleObj(10000000.f, 10000000.f, 10000000.f));
 
         // objManager.transformTriangles("hairball", Transformation::rotateObjX(glm::radians(180.f)));
@@ -396,7 +396,8 @@ namespace Scene
         objManager.transformTriangles("bistro", Transformation::rotateObjX(glm::radians(-180.f)));
         objManager.transformTriangles("bistro", Transformation::rotateObjY(glm::radians(45.f)));
 
-        objManager.transformTriangles("bistro", Transformation::changeObjPosition(glm::vec3(-2400, 1300, 26000.f)));
+       objManager.transformTriangles("bistro", Transformation::changeObjPosition(glm::vec3(-2500, 1600, 6000.f)));
+       // objManager.transformTriangles("bistro", Transformation::changeObjPosition(glm::vec3(-2500, 2000, 600000.f)));
 
        // objManager.transformTriangles("dragon", Transformation::rotateObjY(glm::radians(90.f)));
 

@@ -12,16 +12,21 @@ struct Node {
     int triangleIndex; // -1 if this node is a bounding box, otherwise stores a valid index
     Node* left;
     Node* right;
-    bool hasTriangles; // Flag to indicate if this node contains a triangle or a bounding box
-
-    // Constructor for bounding box
+    bool oneTriangleLeft; // Flag to indicate if this node contains a triangle or a bounding box
+    std::vector<int> triangleNumbers; // Store triangle numbers if this node is a bounding box
+    // Constructor for lbvh bounding box
     Node(const glm::vec3& minBoxD, const glm::vec3& maxBoxD)
-        : minBox(minBoxD), maxBox(maxBoxD), triangleIndex(-1), left(nullptr), right(nullptr), hasTriangles(false) {
+        : minBox(minBoxD), maxBox(maxBoxD), triangleIndex(-1), left(nullptr), right(nullptr), oneTriangleLeft(false) {
     }
 
-    // Constructor for triangle index
+    // Constructor for SAH bounding box
+    Node(const glm::vec3& minBoxD, const glm::vec3& maxBoxD, std::vector<int> triangleNumbersD)
+        : minBox(minBoxD), maxBox(maxBoxD), triangleIndex(-1), triangleNumbers(triangleNumbersD) , left(nullptr), right(nullptr), oneTriangleLeft(false) {
+    }
+
+    // Constructor for end of tree where only one triangle is left
     Node(int index)
-        : triangleIndex(index), left(nullptr), right(nullptr), hasTriangles(true) {
+        : triangleIndex(index), left(nullptr), right(nullptr), oneTriangleLeft(true) {
         minBox = glm::vec3(0); // Default values to avoid uninitialized data
         maxBox = glm::vec3(0);
     }
@@ -40,6 +45,7 @@ public:
     void initDatastructure(const std::vector<Triangle> &triangles);
     std::vector<int> checkIntersection(const Ray &ray, int& boxCount);
     void createBoundingBox(const std::vector<Triangle> &triangles);
+    void createBoundingBoxWithNumbers(const std::vector<Triangle> &triangles, const std::vector<int> &triangleNumbers);
     void fillTriangleNumbers(int a, int b);
     bool intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, const glm::vec3 &maxBox);
     void nodeBoundingBoxIntersection(Node* node, const Ray& ray, std::vector<int>& collectedIndices, int& boxCount);
@@ -61,4 +67,11 @@ public:
     
 };
 
+class Sah
+{
+public:
+    const float sahBucketCost(const std::vector<Triangle> &triangles,std::vector<int> triangleNumbers); // Cost of SAH Bucket
+    std::vector<int> getSortedTriangleNumbers(const std::vector<Triangle>& triangles, std::vector<int> triangleNumbers);
+    std::pair<std::vector<int>, std::vector<int>> findBestBucketSplit(const std::vector<Triangle>& triangles, std::vector<int>& sortedTriangleNumbers, int bucketCount);
+};
 #endif // DATASTRUCTURE_H

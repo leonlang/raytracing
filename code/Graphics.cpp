@@ -146,7 +146,8 @@ namespace Graphics
         glm::vec3 specular = lightColor * triangle.specular * glm::max(dotProduct, 0.00f) * glm::pow(glm::max(glm::dot(r, v), 0.0f), triangle.shininess);
 
         // Combine the three components (diffuse, specular, and ambient) to get the final color
-        return diffuse + specular + ambient;
+        return diffuse + ambient;
+        //return diffuse + specular + ambient;
     }
 
     glm::vec2 getTextureCoordinate(const glm::vec3 &barycentricCoords, const glm::vec2 &texCoordA, const glm::vec2 &texCoordB, const glm::vec2 &texCoordC)
