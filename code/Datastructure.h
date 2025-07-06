@@ -13,15 +13,9 @@ struct Node {
     Node* left;
     Node* right;
     bool oneTriangleLeft; // Flag to indicate if this node contains a triangle or a bounding box
-    std::vector<int> triangleNumbers; // Store triangle numbers if this node is a bounding box
-    // Constructor for lbvh bounding box
+    // Constructor for lbvh and sah bounding box
     Node(const glm::vec3& minBoxD, const glm::vec3& maxBoxD)
         : minBox(minBoxD), maxBox(maxBoxD), triangleIndex(-1), left(nullptr), right(nullptr), oneTriangleLeft(false) {
-    }
-
-    // Constructor for SAH bounding box
-    Node(const glm::vec3& minBoxD, const glm::vec3& maxBoxD, std::vector<int> triangleNumbersD)
-        : minBox(minBoxD), maxBox(maxBoxD), triangleIndex(-1), triangleNumbers(triangleNumbersD) , left(nullptr), right(nullptr), oneTriangleLeft(false) {
     }
 
     // Constructor for end of tree where only one triangle is left
@@ -70,8 +64,9 @@ public:
 class Sah
 {
 public:
-    const float sahBucketCost(const std::vector<Triangle> &triangles,std::vector<int> triangleNumbers); // Cost of SAH Bucket
-    std::vector<int> getSortedTriangleNumbers(const std::vector<Triangle>& triangles, std::vector<int> triangleNumbers);
-    std::pair<std::vector<int>, std::vector<int>> findBestBucketSplit(const std::vector<Triangle>& triangles, std::vector<int>& sortedTriangleNumbers, int bucketCount);
+    const float sahBucketCost(const std::vector<Triangle> &triangles,std::vector<int>& triangleNumbers); // Cost of SAH Bucket
+    std::vector<int> getSortedTriangleNumbers(const std::vector<Triangle>& triangles, std::vector<int>& triangleNumbers, glm::vec3& minBox, glm::vec3& maxBox);
+    std::pair<std::vector<int>, std::vector<int>> findBestBucketSplit(const std::vector<Triangle>& triangles, std::vector<int>& sortedTriangleNumbers, int& bucketCount);
+    Node* createTree(const std::vector<Triangle> &triangles,std::vector<int>& triangleNumbers, int& bucketCount);
 };
 #endif // DATASTRUCTURE_H

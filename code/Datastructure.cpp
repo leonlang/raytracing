@@ -1,17 +1,22 @@
 #include "Datastructure.h"
 #include <glm/gtx/component_wise.hpp>
+#include <thread>
 
-
-void traverseAndPrint(Node* node) {
-    if (!node) return;
+void traverseAndPrint(Node *node)
+{
+    if (!node)
+        return;
 
     std::cout << "Node ";
-    if (node->oneTriangleLeft) {
+    if (node->oneTriangleLeft)
+    {
         std::cout << "[Triangle Index: " << node->triangleIndex << "]\n";
-    } else {
-        std::cout << "[Bounding Box] Min: (" 
-                  << node->minBox.x << ", " << node->minBox.y << ", " << node->minBox.z 
-                  << ") Max: (" << node->maxBox.x << ", " << node->maxBox.y << ", " << node->maxBox.z 
+    }
+    else
+    {
+        std::cout << "[Bounding Box] Min: ("
+                  << node->minBox.x << ", " << node->minBox.y << ", " << node->minBox.z
+                  << ") Max: (" << node->maxBox.x << ", " << node->maxBox.y << ", " << node->maxBox.z
                   << ")\n";
     }
 
@@ -28,29 +33,27 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
 
     // Sah Datastructure
     Sah sah;
-    std::cout << sah.sahBucketCost(triangles,triangleNumbers) << std::endl; // Print the cost of the SAH bucket
+    int bucketCount = 10;                                    // Number of buckets for SAH
+    rootNode = sah.createTree(triangles, triangleNumbers, bucketCount); // Create the SAH tree with 10 buckets
+    /* std::cout << sah.sahBucketCost(triangles,triangleNumbers) << std::endl; // Print the cost of the SAH bucket
     // cout all sorted triangle numbers
     std::vector<int> sortedTriangleNumbers = sah.getSortedTriangleNumbers(triangles, triangleNumbers);
     std::cout << std::endl;
     std::pair<std::vector<int>, std::vector<int>> bucketSplit = sah.findBestBucketSplit(triangles, sortedTriangleNumbers, 10); // Find the best bucket split for 10 buckets
     // Print amount of triangles in each bucket:
     std::cout << "Bucket Split: ";
-    std::cout << "Left Bucket: " << bucketSplit.first.size() << " triangles, Right Bucket: " << bucketSplit.second.size() << " triangles" << std::endl;
-    /* std::cout << "Sorted Triangle Numbers: ";
-    for (int number : sortedTriangleNumbers) {
-        std::cout << number << " ";
-    } */
-    std::cout << std::endl;
+    std::cout << "Left Bucket: " << bucketSplit.first.size() << " triangles, Right Bucket: " << bucketSplit.second.size() << " triangles" << std::endl; */
     // Lbvh Datastructure
+    /**/
     Lbvh lbvh;
     // glm::vec3 avgSize = lbvh.avgTriangleSize(triangles);
     // int gridSize = lbvh.gridSize(triangles);
     // std::cout << "Grid Size: " << gridSize << std::endl;
     float changeGridAmount = 1.f;
-    rootNode = lbvh.createTree(triangles,changeGridAmount);
+    // rootNode = lbvh.createTree(triangles, changeGridAmount);
 }
 
-std::vector<int> Datastructure::checkIntersection(const Ray &ray, int& boxCount)
+std::vector<int> Datastructure::checkIntersection(const Ray &ray, int &boxCount)
 {
     // Datastructure 1: Simple intersection with one box which contains all triangles
 
@@ -60,7 +63,6 @@ std::vector<int> Datastructure::checkIntersection(const Ray &ray, int& boxCount)
     std::vector<int> collectedIndices;
     nodeBoundingBoxIntersection(rootNode, ray, collectedIndices, boxCount);
     return collectedIndices;
-
 
     // Simple Check with one bounding box
     if (intersectRayAabb(ray, minBox, maxBox))
@@ -103,7 +105,6 @@ void Datastructure::createBoundingBoxWithNumbers(const std::vector<Triangle> &tr
         maxBox = glm::max(maxBox, glm::vec3(t.pointTwo) / t.pointTwo.w);
         maxBox = glm::max(maxBox, glm::vec3(t.pointThree) / t.pointThree.w);
     }
-    fillTriangleNumbers(0, triangles.size() - 1); // Fill triangle numbers from 0 to size-1
 }
 
 // Test Function, if no bounding box is used
@@ -173,14 +174,14 @@ std::bitset<60> Lbvh::coordinateToMorton(glm::vec3 &coordinate)
     glm::ivec3 coordinateInt = glm::ivec3(coordinate);
     // std::cout << "Coordinate: " << coordinateInt.x << ", " << coordinateInt.y << ", " << coordinateInt.z << std::endl;
     // Store in 16 bits (bool true = 1, false = 0)
-    const int bitSize = 20; // Each coordinate will be stored in 24 bits
-    const int bitNumber = bitSize * 3; // Total bits for x, y, z coordinates 
+    const int bitSize = 20;            // Each coordinate will be stored in 24 bits
+    const int bitNumber = bitSize * 3; // Total bits for x, y, z coordinates
     // Create a bitset with 72 bits. Convert each coordinate to bits and then use them to create 3x bit morton code
     std::bitset<bitNumber> bits;
     for (int i = 0; i < 3; ++i) // For each coordinate x, y, z
     {
         std::bitset<bitSize> bits2(coordinateInt[i]); // Create a bitset for each coordinate
-        for (int j = 0; j < bitSize; ++j) // For each bit in the coordinate
+        for (int j = 0; j < bitSize; ++j)             // For each bit in the coordinate
         {
             if (bits2[j]) // If the bit is set
             {
@@ -216,7 +217,7 @@ float Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
         minBox = glm::min(minBox, glm::vec3(t.pointThree) / t.pointThree.w);
         maxBox = glm::max(maxBox, glm::vec3(t.pointOne) / t.pointOne.w);
         maxBox = glm::max(maxBox, glm::vec3(t.pointTwo) / t.pointTwo.w);
-        maxBox = glm::max(maxBox, glm::vec3(t.pointThree)  / t.pointThree.w);       
+        maxBox = glm::max(maxBox, glm::vec3(t.pointThree) / t.pointThree.w);
         glm::vec3 size = maxBox - minBox; // Calculate the size of the triangle
         avgSize += size;
     }
@@ -225,7 +226,7 @@ float Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
     return glm::compMax(avgSize);
 }
 
-std::pair<float,glm::vec3> Lbvh::gridConstruction(const std::vector<Triangle> &triangles)
+std::pair<float, glm::vec3> Lbvh::gridConstruction(const std::vector<Triangle> &triangles)
 {
     Datastructure datastructure;
     datastructure.createBoundingBox(triangles);
@@ -233,10 +234,9 @@ std::pair<float,glm::vec3> Lbvh::gridConstruction(const std::vector<Triangle> &t
     glm::vec3 minmaxvec = datastructure.maxBox - datastructure.minBox;
     glm::vec3 negativeCoordinates = datastructure.minBox; // Check if bounding box has negative coordinates
     return std::pair<float, glm::vec3>(maxObjectSize, negativeCoordinates);
-
 }
 
-std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> &triangles,float &changeGridAmount)
+std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> &triangles, float &changeGridAmount)
 {
     std::vector<mortonTriangle> mortonTriangles;
     std::pair<float, glm::vec3> gridPair = gridConstruction(triangles);
@@ -246,7 +246,7 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
     int gridSize = static_cast<int>(std::ceil(gridPair.first / avgTSize));
 
     std::cout << "Grid size: " << gridSize << std::endl;
-   // mortonTriangle mTriangle;
+    // mortonTriangle mTriangle;
     // mTriangle.bits =  bits2;// Initialize with 24 bits
     for (int i = 0; i < triangles.size(); ++i)
     {
@@ -256,12 +256,11 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
         // centered coordinates of the triangle and made positive should there be negative coordinates
         glm::vec3 centerPositive = centralCoordinates(triangles[i]) - gridPair.second;
         glm::vec3 triangleGridPosition = centerPositive / avgTSize; // Calculate the grid position of the triangle
-        
-        mortonTriangles.push_back({coordinateToMorton(triangleGridPosition),i});
+
+        mortonTriangles.push_back({coordinateToMorton(triangleGridPosition), i});
         // print coordinate to bits
         // std::cout << "Bits " << coordinateToMorton(triangleGridPosition) << " End" << std::endl;
     }
-
 
     // Sort the morton triangles based on their bits
 
@@ -269,10 +268,8 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
     /* std::sort(mortonTriangles.begin(), mortonTriangles.end(), [](const mortonTriangle & firstMorton, const mortonTriangle & secondMorton) {
         return firstMorton.bits.to_string() < secondMorton.bits.to_string();
     }); */
-    std::sort(mortonTriangles.begin(), mortonTriangles.end(), [](const mortonTriangle& firstMorton, const mortonTriangle& secondMorton) {
-        return firstMorton.bits.to_ulong() < secondMorton.bits.to_ulong();
-    });
-
+    std::sort(mortonTriangles.begin(), mortonTriangles.end(), [](const mortonTriangle &firstMorton, const mortonTriangle &secondMorton)
+              { return firstMorton.bits.to_ulong() < secondMorton.bits.to_ulong(); });
 
     /* for (const auto& mt : mortonTriangles) {
         std::cout << mt.bits << " - Index: " << mt.index << std::endl;
@@ -287,46 +284,49 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
     return mortonTriangles;
 }
 
-
-
-
-
-Node* Lbvh::createTree(const std::vector<Triangle> &triangles, float &changeGridAmount)
+Node *Lbvh::createTree(const std::vector<Triangle> &triangles, float &changeGridAmount)
 {
     // std::pair<int, float> gridSizePair = gridSize(triangles);
     // Calculate the number of bits needed to represent the grid size
     // const size_t bits_needed = static_cast<size_t>(log2(gridSizePair.first)) + 1;
-    std::vector<mortonTriangle> mortonCodeTriangles  =  mortonCodes(triangles,changeGridAmount); // Get the morton code for the triangles
-    std::vector<Node*> nodes; // Vector to hold the nodes of the tree
-    for (const auto& mt : mortonCodeTriangles) {
+    std::vector<mortonTriangle> mortonCodeTriangles = mortonCodes(triangles, changeGridAmount); // Get the morton code for the triangles
+    std::vector<Node *> nodes;                                                                  // Vector to hold the nodes of the tree
+    for (const auto &mt : mortonCodeTriangles)
+    {
         nodes.push_back(new Node(mt.index)); // Create a new node for each triangle and add it to the vector
     }
 
-    while (nodes.size() > 1) {
-        std::vector<Node*> newNodes;
+    while (nodes.size() > 1)
+    {
+        std::vector<Node *> newNodes;
 
-        for (size_t i = 0; i < nodes.size(); i += 2) {
-            if (i + 1 < nodes.size()) {
+        for (size_t i = 0; i < nodes.size(); i += 2)
+        {
+            if (i + 1 < nodes.size())
+            {
                 glm::vec3 minBox;
                 glm::vec3 maxBox;
                 // Compute min and max bounding box
-                if (!nodes[i]->oneTriangleLeft && !nodes[i + 1]->oneTriangleLeft) {
+                if (!nodes[i]->oneTriangleLeft && !nodes[i + 1]->oneTriangleLeft)
+                {
                     minBox = glm::min(nodes[i]->minBox, nodes[i + 1]->minBox);
                     maxBox = glm::max(nodes[i]->maxBox, nodes[i + 1]->maxBox);
-                } 
+                }
                 // if one node has triangles and the other is a bounding box
-                else if (nodes[i]->oneTriangleLeft && !nodes[i + 1]->oneTriangleLeft) {
+                else if (nodes[i]->oneTriangleLeft && !nodes[i + 1]->oneTriangleLeft)
+                {
                     Datastructure datastructure;
                     std::vector<Triangle> trianglesForBox;
                     trianglesForBox.push_back(triangles[nodes[i]->triangleIndex]);
-                    trianglesForBox.push_back(triangles[nodes[i + 1]->left->triangleIndex]); 
+                    trianglesForBox.push_back(triangles[nodes[i + 1]->left->triangleIndex]);
                     trianglesForBox.push_back(triangles[nodes[i + 1]->right->triangleIndex]);
                     datastructure.createBoundingBox(trianglesForBox);
                     minBox = datastructure.minBox;
                     maxBox = datastructure.maxBox;
-                } 
+                }
                 // if the other node has triangles and the first is a bounding box
-                else if (!nodes[i]->oneTriangleLeft && nodes[i + 1]->oneTriangleLeft) {
+                else if (!nodes[i]->oneTriangleLeft && nodes[i + 1]->oneTriangleLeft)
+                {
                     Datastructure datastructure;
                     std::vector<Triangle> trianglesForBox;
                     trianglesForBox.push_back(triangles[nodes[i + 1]->triangleIndex]);
@@ -337,7 +337,8 @@ Node* Lbvh::createTree(const std::vector<Triangle> &triangles, float &changeGrid
                     maxBox = datastructure.maxBox;
                 }
                 // if both nodes have triangles, create a new bounding box
-                else {
+                else
+                {
                     Datastructure datastructure;
                     std::vector<Triangle> trianglesForBox;
                     trianglesForBox.push_back(triangles[nodes[i]->triangleIndex]);
@@ -349,12 +350,14 @@ Node* Lbvh::createTree(const std::vector<Triangle> &triangles, float &changeGrid
                 }
 
                 // Create parent node
-                Node* parent = new Node(minBox, maxBox);
+                Node *parent = new Node(minBox, maxBox);
                 parent->left = nodes[i];
-                parent->right = nodes[i+1];
+                parent->right = nodes[i + 1];
 
                 newNodes.push_back(parent);
-            } else {
+            }
+            else
+            {
                 // If there's an odd number of nodes, carry the last one forward
                 newNodes.push_back(nodes[i]);
             }
@@ -364,70 +367,72 @@ Node* Lbvh::createTree(const std::vector<Triangle> &triangles, float &changeGrid
 
     std::cout << "LBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
-
-    Node* root = nodes[0]; // The last remaining node is the root of the tree
-    return root; // Return the root node of the tree
+    Node *root = nodes[0]; // The last remaining node is the root of the tree
+    return root;           // Return the root node of the tree
     // traverseAndPrint(root); // Traverse and print the tree structure
-
 }
 
-
-void Datastructure::nodeBoundingBoxIntersection(Node* node, const Ray& ray, std::vector<int>& collectedIndices, int& boxCount) {
-    if (!node) return; // Ensure node is valid
+void Datastructure::nodeBoundingBoxIntersection(Node *node, const Ray &ray, std::vector<int> &collectedIndices, int &boxCount)
+{
+    if (!node)
+        return; // Ensure node is valid
 
     // Count this bounding box as traversed
     ++boxCount;
 
-
     // If it's a leaf node containing a triangle, collect its index
-    if (node->oneTriangleLeft) {
+    if (node->oneTriangleLeft)
+    {
         collectedIndices.push_back(node->triangleIndex);
         return;
     }
 
     // If there's no intersection, return early
-    if (!intersectRayAabb(ray, node->minBox, node->maxBox)) {
+    if (!intersectRayAabb(ray, node->minBox, node->maxBox))
+    {
         return;
     }
-
 
     // Recurse for left and right children
     nodeBoundingBoxIntersection(node->left, ray, collectedIndices, boxCount);
     nodeBoundingBoxIntersection(node->right, ray, collectedIndices, boxCount);
 }
-const float Sah::sahBucketCost(const std::vector<Triangle> &triangles,std::vector<int> triangleNumbers){
+const float Sah::sahBucketCost(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers)
+{
     Datastructure datastructure;
     datastructure.createBoundingBoxWithNumbers(triangles, triangleNumbers);
     // Cost of Box is the volume of the bounding box
-    float costBox = (datastructure.maxBox.x - datastructure.minBox.x) * (datastructure.maxBox.y - datastructure.minBox.y) * (datastructure.maxBox.z - datastructure.minBox.z); 
+    float costBox = (datastructure.maxBox.x - datastructure.minBox.x) * (datastructure.maxBox.y - datastructure.minBox.y) * (datastructure.maxBox.z - datastructure.minBox.z);
     float cost = costBox * triangleNumbers.size(); // Cost of the bounding box is the volume times the number of triangles in it
     return cost;
 }
 
-std::vector<int> Sah::getSortedTriangleNumbers(const std::vector<Triangle>& triangles, std::vector<int> triangleNumbers) {
+std::vector<int> Sah::getSortedTriangleNumbers(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, glm::vec3 &minBox, glm::vec3 &maxBox)
+{
     // Calculate the bounding box size in each dimension
-    Datastructure datastructure;
-    datastructure.createBoundingBoxWithNumbers(triangles, triangleNumbers);
-    glm::vec3 boxSize = datastructure.maxBox - datastructure.minBox;
+    glm::vec3 boxSize = maxBox - minBox;
 
-    if (boxSize.x > boxSize.y && boxSize.x > boxSize.z) {
-        std::sort(triangleNumbers.begin(), triangleNumbers.end(), [&](int a, int b) {
-            return triangles[a].pointOne.x < triangles[b].pointOne.x;
-        });
-    } else if (boxSize.y > boxSize.x && boxSize.y > boxSize.z) {
-        std::sort(triangleNumbers.begin(), triangleNumbers.end(), [&](int a, int b) {
-            return triangles[a].pointOne.y < triangles[b].pointOne.y;
-        });
-    } else {
-        std::sort(triangleNumbers.begin(), triangleNumbers.end(), [&](int a, int b) {
-            return triangles[a].pointOne.z < triangles[b].pointOne.z;
-        });
-    } 
+    if (boxSize.x > boxSize.y && boxSize.x > boxSize.z)
+    {
+        std::sort(triangleNumbers.begin(), triangleNumbers.end(), [&](int a, int b)
+                  { return triangles[a].pointOne.x < triangles[b].pointOne.x; });
+    }
+    else if (boxSize.y > boxSize.x && boxSize.y > boxSize.z)
+    {
+        std::sort(triangleNumbers.begin(), triangleNumbers.end(), [&](int a, int b)
+                  { return triangles[a].pointOne.y < triangles[b].pointOne.y; });
+    }
+    else
+    {
+        std::sort(triangleNumbers.begin(), triangleNumbers.end(), [&](int a, int b)
+                  { return triangles[a].pointOne.z < triangles[b].pointOne.z; });
+    }
 
     return triangleNumbers;
 }
 
-std::pair<std::vector<int>, std::vector<int>> Sah::findBestBucketSplit(const std::vector<Triangle>& triangles, std::vector<int>& sortedTriangleNumbers, int bucketCount){
+std::pair<std::vector<int>, std::vector<int>> Sah::findBestBucketSplit(const std::vector<Triangle> &triangles, std::vector<int> &sortedTriangleNumbers, int &bucketCount)
+{
     std::vector<int> leftBucket;
     std::vector<int> rightBucket;
     std::vector<int> bestLeftBucket;
@@ -437,7 +442,8 @@ std::pair<std::vector<int>, std::vector<int>> Sah::findBestBucketSplit(const std
     float bestCost = FLT_MAX;
 
     // Iterate through possible split points
-    for (int i = 1; i < bucketCount; ++i) {
+    for (int i = 1; i < bucketCount; ++i)
+    {
 
         int split = (i * sortedTriangleNumbers.size()) / bucketCount;
         leftBucket = std::vector<int>(sortedTriangleNumbers.begin(), sortedTriangleNumbers.begin() + split);
@@ -448,11 +454,52 @@ std::pair<std::vector<int>, std::vector<int>> Sah::findBestBucketSplit(const std
 
         float totalCost = leftCost + rightCost;
         // If this is the best cost so far, update the best buckets
-        if (totalCost < bestCost) {
+        if (totalCost < bestCost)
+        {
             bestCost = totalCost;
             bestLeftBucket = leftBucket;
             bestRightBucket = rightBucket;
         }
     }
-    return {bestLeftBucket, bestRightBucket}; // Return the best split buckets found    
+    return {bestLeftBucket, bestRightBucket}; // Return the best split buckets found
+}
+
+Node *Sah::createTree(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, int &bucketCount)
+{
+    if (triangleNumbers.empty())
+    {
+        // If there are no triangles, return a null node
+        std::cout << "No triangles to create a tree, something wrong?" << std::endl;
+        return nullptr;
+    }
+    if (triangleNumbers.size() == 1)
+    {
+        // If there's only one triangle, create a leaf node with that triangle's index
+        // std::cout << "Creating leaf node with triangle index: " << triangleNumbers[0] << std::endl;
+
+        return new Node(triangleNumbers[0]);
+    }
+
+    Datastructure datastructure;
+    datastructure.createBoundingBoxWithNumbers(triangles, triangleNumbers);
+    // If there are only two triangles, create a node with both triangles
+    // This improves the performance of the tree because no sorting is needed
+    if (triangleNumbers.size() == 2)
+    {
+        Node *node = new Node(datastructure.minBox, datastructure.maxBox);
+        node->left = new Node(triangleNumbers[0]);
+        node->right = new Node(triangleNumbers[1]);
+        return node;
+    }
+    // End the timer
+
+    Node *node = new Node(datastructure.minBox, datastructure.maxBox);
+    std::vector<int> sortedTriangleNumbers = getSortedTriangleNumbers(triangles, triangleNumbers, datastructure.minBox, datastructure.maxBox); // Get the sorted triangle numbers based on the largest axis
+    std::pair<std::vector<int>, std::vector<int>> bucketSplit = findBestBucketSplit(triangles, sortedTriangleNumbers, bucketCount);            // Find the best bucket split for specified bucket count
+
+    // std::cout << "Creating SAH tree with " << triangleNumbers.size() << " triangles" << std::endl;
+    // std::cout << "Bucket Split: Left Bucket: " << bucketSplit.first.size() << " triangles, Right Bucket: " << bucketSplit.second.size() << " triangles" << std::endl;
+    node->left = createTree(triangles, bucketSplit.first, bucketCount);   // Create the left subtree with the left bucket
+    node->right = createTree(triangles, bucketSplit.second, bucketCount); // Create the right subtree with the right bucket
+    return node;
 }

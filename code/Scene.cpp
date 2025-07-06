@@ -64,14 +64,10 @@ namespace Scene
         imageSize = glm::vec2(600, 400);                     // Image Size
         lightPos = glm::vec4(500.0f, -300.0f, -200.f, 1.0f); // Light Position
 
-        // 3 Trees
         objManager.loadObjFile("tree", "./obj/tree/tree.obj");
-        // Copy Tree onto Tree1 and 2
-        // Place Tree 0
         objManager.transformTriangles("tree", Transformation::scaleObj(0.03f, 0.03f, 0.03f));
         objManager.transformTriangles("tree", Transformation::rotateObjX(glm::radians(-90.f)));
         objManager.transformTriangles("tree", Transformation::changeObjPosition(glm::vec3(-6.f, -25.f, -25.f)));
-        // Place Tree 1
     }
 
     void sceneComplex(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree, glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor)
