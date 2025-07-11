@@ -35,6 +35,8 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     Sah sah;
     int bucketCount = 10;                                    // Number of buckets for SAH
     rootNode = sah.createTree(triangles, triangleNumbers, bucketCount); // Create the SAH tree with 10 buckets
+    std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
+
     /* std::cout << sah.sahBucketCost(triangles,triangleNumbers) << std::endl; // Print the cost of the SAH bucket
     // cout all sorted triangle numbers
     std::vector<int> sortedTriangleNumbers = sah.getSortedTriangleNumbers(triangles, triangleNumbers);
@@ -51,6 +53,8 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     // std::cout << "Grid Size: " << gridSize << std::endl;
     float changeGridAmount = 1.f;
     // rootNode = lbvh.createTree(triangles, changeGridAmount);
+    // std::cout << "LBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
+
 }
 
 std::vector<int> Datastructure::checkIntersection(const Ray &ray, int &boxCount)
@@ -501,5 +505,6 @@ Node *Sah::createTree(const std::vector<Triangle> &triangles, std::vector<int> &
     // std::cout << "Bucket Split: Left Bucket: " << bucketSplit.first.size() << " triangles, Right Bucket: " << bucketSplit.second.size() << " triangles" << std::endl;
     node->left = createTree(triangles, bucketSplit.first, bucketCount);   // Create the left subtree with the left bucket
     node->right = createTree(triangles, bucketSplit.second, bucketCount); // Create the right subtree with the right bucket
+
     return node;
 }

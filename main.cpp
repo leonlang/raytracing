@@ -106,7 +106,7 @@ ImageData sendRaysAndIntersectPointsColors(
 	// specify how many threads the hardware should use.
 	// If you specify more threads than available cores, the hardware will run at max and possibly everything else will run slower or crash.
 	// I would recommend half the number of threads as available cores.
-    const int numThreads = std::thread::hardware_concurrency() / 2;
+    const int numThreads = 1; //std::thread::hardware_concurrency() / 2;
     std::vector<std::thread> threads;
 	// store the results I get from each thread in a vector
     std::vector<std::vector<std::tuple<glm::vec2, glm::vec3, int>>> threadResults(numThreads);
@@ -180,7 +180,7 @@ int main()
 		std::vector<glm::vec3> shadowPointsAO = Graphics::ambientOcclusionShadowPoints(); // Get the shadow points for ambient occlusion
 
 		// Choose Szene
-		Scene::bistroInterior(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
+		Scene::hairball(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
 
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
@@ -189,13 +189,14 @@ int main()
 		// End the timer
 		auto endInit = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsedInit = endInit - startInit;
-		std::cout << "Time taken for OBJ Loading: " << elapsedInit.count() << " seconds " << std::endl;
 
 		// Print the loaded objects
 		for (const auto &[name, obj] : objManager.objObjects)
 		{
 			std::cout << "Filename: " << name << "\n";
 		}
+
+		std::cout << "Time taken for OBJ Loading: " << elapsedInit.count() << " seconds " << std::endl;
 
 		// Start the timer for RaymIntersection
 		auto startDatastructureInit = std::chrono::high_resolution_clock::now();
