@@ -33,7 +33,7 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
 
     // Sah Datastructure
     Sah sah;
-    int bucketCount = 10;                                    // Number of buckets for SAH
+    int bucketCount = 10;                                               // Number of buckets for SAH
     rootNode = sah.createTree(triangles, triangleNumbers, bucketCount); // Create the SAH tree with 10 buckets
     std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
@@ -54,7 +54,6 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     float changeGridAmount = 1.f;
     // rootNode = lbvh.createTree(triangles, changeGridAmount);
     // std::cout << "LBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
-
 }
 
 std::vector<int> Datastructure::checkIntersection(const Ray &ray, int &boxCount)
@@ -171,6 +170,20 @@ bool Datastructure::intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, co
     }
 
     return true;
+}
+
+std::pair<glm::vec3, glm::vec3> Datastructure::combineBoundingBoxes(std::vector<std::pair<glm::vec3, glm::vec3>> boundingBoxes)
+{
+    glm::vec3 minBox(FLT_MAX, FLT_MAX, FLT_MAX);
+    glm::vec3 maxBox(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+    for (const auto &box : boundingBoxes)
+    {
+        minBox = glm::min(minBox, box.first);
+        maxBox = glm::max(maxBox, box.second);
+    }
+
+    return std::make_pair(minBox, maxBox);
 }
 
 std::bitset<60> Lbvh::coordinateToMorton(glm::vec3 &coordinate)
@@ -410,6 +423,13 @@ const float Sah::sahBucketCost(const std::vector<Triangle> &triangles, std::vect
     float cost = costBox * triangleNumbers.size(); // Cost of the bounding box is the volume times the number of triangles in it
     return cost;
 }
+const float Sah::sahBucketCostOptimized(std::pair<glm::vec3, glm::vec3> &boundingBox, int triangleCount)
+{
+    // Cost of Box is the volume of the bounding box
+    float costBox = (boundingBox.second.x - boundingBox.first.x) * (boundingBox.second.y - boundingBox.first.y) * (boundingBox.second.z - boundingBox.first.z);
+    float cost = costBox * triangleCount; // Cost of the bounding box is the volume times the number of triangles in it
+    return cost;
+}
 
 std::vector<int> Sah::getSortedTriangleNumbers(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, glm::vec3 &minBox, glm::vec3 &maxBox)
 {
@@ -437,6 +457,7 @@ std::vector<int> Sah::getSortedTriangleNumbers(const std::vector<Triangle> &tria
 
 std::pair<std::vector<int>, std::vector<int>> Sah::findBestBucketSplit(const std::vector<Triangle> &triangles, std::vector<int> &sortedTriangleNumbers, int &bucketCount)
 {
+    std::vector<int> bucket;
     std::vector<int> leftBucket;
     std::vector<int> rightBucket;
     std::vector<int> bestLeftBucket;
@@ -445,7 +466,9 @@ std::pair<std::vector<int>, std::vector<int>> Sah::findBestBucketSplit(const std
     // Initialize the best cost to a large value
     float bestCost = FLT_MAX;
 
+    /*
     // Iterate through possible split points
+    // Old option which creates a new bounding box for each split
     for (int i = 1; i < bucketCount; ++i)
     {
 
@@ -465,7 +488,54 @@ std::pair<std::vector<int>, std::vector<int>> Sah::findBestBucketSplit(const std
             bestRightBucket = rightBucket;
         }
     }
-    return {bestLeftBucket, bestRightBucket}; // Return the best split buckets found
+    */
+    // Improved Option which first calculates all possible bounding boxes and then merges them for faster performance
+    std::vector<std::pair<glm::vec3, glm::vec3>> boundingBoxes(bucketCount); // Vector to hold the bounding boxes for each split
+    std::vector<std::vector<int>> bucketNumbers(bucketCount);
+    int bestBucketSplit = -1;
+    for (int i = 0; i < bucketCount; ++i)
+    {
+        Datastructure datastructure;
+        int begin = (i * sortedTriangleNumbers.size()) / bucketCount;
+        int split = ((i + 1) * sortedTriangleNumbers.size()) / bucketCount;
+        bucketNumbers[i].assign(sortedTriangleNumbers.begin() + begin, sortedTriangleNumbers.begin() + split);
+        datastructure.createBoundingBoxWithNumbers(triangles, bucketNumbers[i]);
+        boundingBoxes[i] = {datastructure.minBox, datastructure.maxBox};
+    }
+    // Precompute bounding box combinations based on the bucket numbers
+    std::vector<std::pair<glm::vec3, glm::vec3>> leftBBox(bucketCount);
+    std::vector<std::pair<glm::vec3, glm::vec3>> rightBBox(bucketCount);
+    leftBBox[0] = boundingBoxes[0];
+    for (int i = 1; i < bucketCount; ++i)
+        leftBBox[i] = Datastructure().combineBoundingBoxes({leftBBox[i - 1], boundingBoxes[i]});
+    rightBBox[bucketCount - 1] = boundingBoxes[bucketCount - 1];
+    for (int i = bucketCount - 2; i >= 0; --i)
+        rightBBox[i] = Datastructure().combineBoundingBoxes({rightBBox[i + 1], boundingBoxes[i]});
+
+    // Check each split and calculate the best option
+    int leftSize = 0;
+    for (int i = 1; i < bucketCount; ++i)
+    {
+        leftSize += bucketNumbers[i - 1].size(); // Increase the left triangle size by the size of the new bucket which is added
+        int rightSize = sortedTriangleNumbers.size() - leftSize;
+
+        float leftCost = sahBucketCostOptimized(leftBBox[i - 1], leftSize);
+        float rightCost = sahBucketCostOptimized(rightBBox[i], rightSize);
+        float totalCost = leftCost + rightCost;
+
+        if (totalCost < bestCost)
+        {
+            bestCost = totalCost;
+            bestBucketSplit = i;
+        }
+    }
+    // Build triangles left and right for the best split and return them
+    for (int i = 0; i < bestBucketSplit; ++i)
+        bestLeftBucket.insert(bestLeftBucket.end(), bucketNumbers[i].begin(), bucketNumbers[i].end());
+    for (int i = bestBucketSplit; i < bucketCount; ++i)
+        bestRightBucket.insert(bestRightBucket.end(), bucketNumbers[i].begin(), bucketNumbers[i].end());
+
+    return {bestLeftBucket, bestRightBucket};
 }
 
 Node *Sah::createTree(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, int &bucketCount)

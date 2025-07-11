@@ -23,7 +23,7 @@ struct Node {
         : triangleIndex(index), left(nullptr), right(nullptr), oneTriangleLeft(true) {
         minBox = glm::vec3(0); // Default values to avoid uninitialized data
         maxBox = glm::vec3(0);
-    }
+    }    std::pair<glm::vec3, glm::vec3> combineBoundingBoxes(std::vector<std::pair<glm::vec3, glm::vec3>> &boundingBoxes);
 };
 
 
@@ -43,6 +43,7 @@ public:
     void fillTriangleNumbers(int a, int b);
     bool intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, const glm::vec3 &maxBox);
     void nodeBoundingBoxIntersection(Node* node, const Ray& ray, std::vector<int>& collectedIndices, int& boxCount);
+    std::pair<glm::vec3, glm::vec3> combineBoundingBoxes(std::vector<std::pair<glm::vec3, glm::vec3>> boundingBoxes);
 
 };
 class Lbvh
@@ -65,6 +66,8 @@ class Sah
 {
 public:
     const float sahBucketCost(const std::vector<Triangle> &triangles,std::vector<int>& triangleNumbers); // Cost of SAH Bucket
+    const float sahBucketCostOptimized(std::pair<glm::vec3, glm::vec3> &boundingBox, int triangleCount);
+
     std::vector<int> getSortedTriangleNumbers(const std::vector<Triangle>& triangles, std::vector<int>& triangleNumbers, glm::vec3& minBox, glm::vec3& maxBox);
     std::pair<std::vector<int>, std::vector<int>> findBestBucketSplit(const std::vector<Triangle>& triangles, std::vector<int>& sortedTriangleNumbers, int& bucketCount);
     Node* createTree(const std::vector<Triangle> &triangles,std::vector<int>& triangleNumbers, int& bucketCount);
