@@ -395,20 +395,21 @@ namespace Scene
         float circleZ = radius * std::cos(radians);       // Calculate z coordinate on the circle
         backgroundColor = glm::vec3(200.f, 200.f, 200.f); // Background Color
         // for each degree low down increase lookDownY by 2000
-        float lookDownAngle = 1.9f; // Angle to look down
-        float lookDownY = -1800.f;  // Y position to look down from
-                                    // viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, lookDownY, -circleZ), glm::vec3(glm::radians(lookDownAngle), glm::radians(angleDegree), glm::radians(0.f)));
+        float lookDownAngle = 12.0f;// 1.9f; // Angle to look down
+        float lookDownY = -21000.f; // -1800.f;  // Y position to look down from
+        viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, lookDownY, -circleZ), glm::vec3(glm::radians(lookDownAngle), glm::radians(angleDegree), glm::radians(0.f)));
 
-        viewMatrix = Transformation::createViewMatrix(glm::vec3(circleX, 0.0f, -circleZ), glm::vec3(glm::radians(0.0f), glm::radians(angleDegree), glm::radians(0.f)));
+        //  = Transformation::createViewMatrix(glm::vec3(circleX, 0.0f, -circleZ), glm::vec3(glm::radians(0.0f), glm::radians(angleDegree), glm::radians(0.f)));
 
         imageSize = glm::vec2(1920, 1080);                         // Image Size
-        lightPos = glm::vec4(-5000.0f, -15000.0f, -20000.f, 1.0f); // Light Position
-        objManager.loadObjFile("bistro", "./obj/bistro/Exterior/exterior.obj");
-        objManager.transformTriangles("bistro", Transformation::scaleObj(0.1f, 0.1f, 0.1f));
+        lightPos = glm::vec4(5000.0f, -15000.0f, 0000.f, 1.0f); // Light Position
+        objManager.loadObjFile("bistro", "./obj/bistro/Exterior/exterior_a.obj");
+        objManager.transformTriangles("bistro", Transformation::scaleObj(100.f, 100.f, 100.f));
         objManager.transformTriangles("bistro", Transformation::rotateObjX(glm::radians(-180.f)));
         objManager.transformTriangles("bistro", Transformation::rotateObjY(glm::radians(75.f)));
+        objManager.transformTriangles("bistro", Transformation::changeObjPosition(glm::vec3(00, 600, 0.f)));
         // Between 20 and 30
-        objManager.transformTriangles("bistro", Transformation::changeObjPosition(glm::vec3(00, 110, -100022.2f)));
+        // objManager.transformTriangles("bistro", Transformation::changeObjPosition(glm::vec3(00, 110, -100022.2f)));
     }
 
 }

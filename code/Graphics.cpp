@@ -75,7 +75,7 @@ namespace Graphics
             /* if (interpolatedTexCoordinate.y < 10000000.0f)
             {
             std::cout << "interpolatedTexCoordinate: " << static_cast<int>(interpolatedTexCoordinate.y) << " TexDim: " << static_cast<int>(interpolatedTexCoordinate.x)  << std::endl;
-            std::cout << "TexIndex : " << texIndex << " TexDim: " << texDim.x << std::endl;
+            std::cout << "TexIndex : " << texIndex << " TexDim: " << texDim.x << "TexDimY" << texDim.y << std::endl;
             std::cout << " Triangle Texture Name: " << triangle.textureName << std::endl;
             std::cout << "Triangle Color Coordinates: " << triangle.colorOneCoordinate.x << " " << triangle.colorTwoCoordinate.x << " " << triangle.colorThreeCoordinate.x << std::endl;
             std::cout << "Triangle Color Coordinates: " << triangle.colorOneCoordinate.y << " " << triangle.colorTwoCoordinate.y << " " << triangle.colorThreeCoordinate.y << std::endl;
@@ -87,11 +87,18 @@ namespace Graphics
             std::cout << " Ray Origin: " << ray.origin.x << " " << ray.origin.y << " " << ray.origin.z << std::endl;
             std::cout << " Ray Direction: " << ray.direction.x << " " << ray.direction.y << " " << ray.direction.z << std::endl;
             std::cout << "Distance: " << distance << std::endl;
-            } */
-
+            }  */
+           if (texIndex + 2 >= texDim.x * texDim.y * 3)
+            {
+                std::cout << "Texture Index out of bounds: " << texIndex << " for texture: " << triangle.textureName << std::endl;
+                return glm::vec3(1.0f, 1.0f, 1.0f); // Return white color if out of bounds
+            }
+            else {
             objColor.x = texData[texIndex + 0] / 255.0f;
             objColor.y = texData[texIndex + 1] / 255.0f;
             objColor.z = texData[texIndex + 2] / 255.0f;
+            }
+            
         }
         // Phong illumination model
         // std::cout << "Triangle Diffuse: " << triangle.diffuse.x << " " << triangle.diffuse.y << " " << triangle.diffuse.z << std::endl;
@@ -146,8 +153,8 @@ namespace Graphics
         glm::vec3 specular = lightColor * triangle.specular * glm::max(dotProduct, 0.00f) * glm::pow(glm::max(glm::dot(r, v), 0.0f), triangle.shininess);
 
         // Combine the three components (diffuse, specular, and ambient) to get the final color
-        return diffuse + ambient;
-        //return diffuse + specular + ambient;
+        // return diffuse + ambient;
+        return diffuse + specular + ambient;
     }
 
     glm::vec2 getTextureCoordinate(const glm::vec3 &barycentricCoords, const glm::vec2 &texCoordA, const glm::vec2 &texCoordB, const glm::vec2 &texCoordC)

@@ -51,16 +51,21 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 		}
 	}
 	// If no intersection was found, set the colorPoint to -1 so we can color it as background
+
 	if (!isIntersection)
 	{
 		colorPoint = backgroundColor; // No intersection found
 	}
 	else
 	{
+		// std::cout << "Trianlge prpertie at lastIntersectionNumber: " << objManager.triangles.at(lastIntersectionNumber).pointOne.x << ", " << objManager.triangles.at(lastIntersectionNumber).pointOne.y << ", " << objManager.triangles.at(lastIntersectionNumber).pointOne.z << std::endl;
 		color = Graphics::phongIllumination(objManager, objManager.triangles.at(lastIntersectionNumber), ray, lightPos, distanceComparison);
 
-		// Check for Shadows
+		// Turn on Shadows or Ambient Occlusion
+		// For Shadows go to Intersections.cpp and turn on smallBias or it won't work
+		// For Ambient Occlusion do same
 		bool isShadow = false;
+		bool isAmbientOcclusion = false;
 		int shadowAmount = 0;
 		if (isShadow)
 		{
@@ -72,19 +77,30 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 				// The for looop goes through those triangles
 				if (Intersection::shadowIntersection(objManager, datastructure, lightPosChanged, distanceComparison, ray))
 
-				// if (Intersection::shadowIntersection(objManager, datastructure, point, fDistance, ray))
+				// if (Intersection::shadowIntersection(objManager, datastructure, point, distanceComparison, ray))
 				{
 					shadowAmount++;
 				};
 			}
-			color = color * (float(randomCoordinates.size() - shadowAmount)) / float(randomCoordinates.size()); //+ color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
-																												// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 8.f / float(randomCoordinates.size());
-																												// color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size());
+			color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
+			Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
 		}
-		Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
-		// color = color * float(randomCoordinates.size() - shadowAmount) + color * float(shadowAmount) * 0.2f;
+		else if (isAmbientOcclusion)
+		{
+			for (const glm::vec3 &point : randomCoordinates)
+				if (Intersection::shadowIntersection(objManager, datastructure, point, distanceComparison, ray))
+				{
+					shadowAmount++;
+				};
+			color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 0.5f / float(randomCoordinates.size());
+			Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
+
+		}
+		// Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
+
 		colorPoint = glm::vec3(glm::ceil(color * 255.0f)); // Check if any point is over 255 and cout it
 	}
+
 	return colorPoint;
 }
 
@@ -92,29 +108,30 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 // Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
 // Sends out Rays and returns the corresponding color for each pixel
 ImageData sendRaysAndIntersectPointsColors(
-    const glm::vec2 &imageSize,
-    const glm::vec4 &lightPos,
-    ObjectManager &objManager,
-    Datastructure &datastructure,
-    glm::vec3 &backgroundColor,
-    std::vector<int> &boxCounts,
-    std::vector<glm::vec3> &shadowPoints)
+	const glm::vec2 &imageSize,
+	const glm::vec4 &lightPos,
+	ObjectManager &objManager,
+	Datastructure &datastructure,
+	glm::vec3 &backgroundColor,
+	std::vector<int> &boxCounts,
+	std::vector<glm::vec3> &shadowPoints)
 {
-    const glm::vec3 lightPosition(lightPos.x, lightPos.y, lightPos.z);
+	const glm::vec3 lightPosition(lightPos.x, lightPos.y, lightPos.z);
 
-    ImageData imageData;
+	ImageData imageData;
 	// specify how many threads the hardware should use.
 	// If you specify more threads than available cores, the hardware will run at max and possibly everything else will run slower or crash.
 	// I would recommend half the number of threads as available cores.
-    const int numThreads = 1; //std::thread::hardware_concurrency() / 2;
-    std::vector<std::thread> threads;
+	const int numThreads = std::thread::hardware_concurrency(); // / 2;
+	std::vector<std::thread> threads;
 	// store the results I get from each thread in a vector
-    std::vector<std::vector<std::tuple<glm::vec2, glm::vec3, int>>> threadResults(numThreads);
+	std::vector<std::vector<std::tuple<glm::vec2, glm::vec3, int>>> threadResults(numThreads);
 
 	// go through number of specified threads
-    for (int t = 0; t < numThreads; ++t)
-    {
-        threads.emplace_back([=, &objManager, &datastructure, &backgroundColor, &shadowPoints, &threadResults]() {
+	for (int t = 0; t < numThreads; ++t)
+	{
+		threads.emplace_back([=, &objManager, &datastructure, &backgroundColor, &shadowPoints, &threadResults]()
+							 {
             int start = t * imageSize.x / numThreads;
             int end = (t + 1) * imageSize.x / numThreads;
 
@@ -136,27 +153,24 @@ ImageData sendRaysAndIntersectPointsColors(
                 }
             }
 
-            threadResults[t] = std::move(localResults);
-        });
-    }
+            threadResults[t] = std::move(localResults); });
+	}
 
-    for (auto &t : threads)
-        t.join();
+	for (auto &t : threads)
+		t.join();
 
-    for (const auto &threadVec : threadResults)
-    {
-        for (const auto &[point, color, count] : threadVec)
-        {
-            imageData.imagePoints.push_back(point);
-            imageData.imageColors.push_back(color);
-            boxCounts.push_back(count);
-        }
-    }
+	for (const auto &threadVec : threadResults)
+	{
+		for (const auto &[point, color, count] : threadVec)
+		{
+			imageData.imagePoints.push_back(point);
+			imageData.imageColors.push_back(color);
+			boxCounts.push_back(count);
+		}
+	}
 
-    return imageData;
+	return imageData;
 }
-
-
 
 int main()
 {
@@ -176,7 +190,7 @@ int main()
 		glm::vec2 imageSize;
 		glm::vec4 lightPos;
 		glm::vec3 backgroundColor(0.f, 0.f, 0.f);
-		std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(2, 500.0f);
+		std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(1, 500.0f);
 		std::vector<glm::vec3> shadowPointsAO = Graphics::ambientOcclusionShadowPoints(); // Get the shadow points for ambient occlusion
 
 		// Choose Szene
@@ -212,7 +226,7 @@ int main()
 		auto start = std::chrono::high_resolution_clock::now();
 		std::vector<int> boxCounts; // Vector to store the number of boxes checked during intersection
 		// max value of boxCounts
-		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure, backgroundColor, boxCounts, shadowPointsAO);
+		ImageData points = sendRaysAndIntersectPointsColors(imageSize, lightPos, objManager, datastructure, backgroundColor, boxCounts, randomCoordinates);
 		int maxBoxes = *std::max_element(boxCounts.begin(), boxCounts.end());
 		std::cout << "Max Box Count: " << maxBoxes << std::endl;
 

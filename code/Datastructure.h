@@ -72,4 +72,15 @@ public:
     std::pair<std::vector<int>, std::vector<int>> findBestBucketSplit(const std::vector<Triangle>& triangles, std::vector<int>& sortedTriangleNumbers, int& bucketCount);
     Node* createTree(const std::vector<Triangle> &triangles,std::vector<int>& triangleNumbers, int& bucketCount);
 };
+class Hlbvh
+{
+public:
+    struct mortonTriangle {
+        std::bitset<60> bits; // Adjust size as needed
+        int index;
+    };
+    std::vector<mortonTriangle> mortonCodes(const std::vector<Triangle> &triangles,std::vector<int> &triangleNumbers, float &changeGridAmount);
+    Node* createLbvhTree(const std::vector<Triangle> &triangles,std::vector<int> &triangleNumbers,float &changeGridAmount);
+    Node* createTree(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, int &bucketCount, int &sahDepth, float &changeGridAmount,int sahCurrentDepth);
+};
 #endif // DATASTRUCTURE_H
