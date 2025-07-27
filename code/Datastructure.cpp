@@ -34,15 +34,15 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     // Sah Datastructure
     Sah sah;
     int bucketCount = 10; // Number of buckets for SAH
-    rootNode = sah.createTree(triangles, triangleNumbers, bucketCount); // Create the SAH tree with 10 buckets
+    // rootNode = sah.createTree(triangles, triangleNumbers, bucketCount); // Create the SAH tree with 10 buckets
     // std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
     // Sah Datastructure
     Hlbvh hlbvh;
     int bucketCountHlbvh = 10;
-    int sahDepth = 12;
+    int sahDepth = 17;
     float changeGridAmountHlbvh = 1.f;                                                                        // Number of buckets for SAH
-    // rootNode = hlbvh.createTree(triangles, triangleNumbers, bucketCount, sahDepth, changeGridAmountHlbvh, 0); // Create the SAH tree with 10 buckets
+    rootNode = hlbvh.createTree(triangles, triangleNumbers, bucketCount, sahDepth, changeGridAmountHlbvh, 0); // Create the SAH tree with 10 buckets
     std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
     /* std::cout << sah.sahBucketCost(triangles,triangleNumbers) << std::endl; // Print the cost of the SAH bucket

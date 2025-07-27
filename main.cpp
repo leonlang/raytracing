@@ -194,7 +194,7 @@ int main()
 		std::vector<glm::vec3> shadowPointsAO = Graphics::ambientOcclusionShadowPoints(); // Get the shadow points for ambient occlusion
 
 		// Choose Szene
-		Scene::dragon(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
+		Scene::hairball(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
 
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
