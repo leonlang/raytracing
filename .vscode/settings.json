@@ -57,6 +57,7 @@
         "cstddef": "cpp",
         "future": "cpp",
         "chrono": "cpp",
-        "tuple": "cpp"
+        "tuple": "cpp",
+        "thread": "cpp"
     }
 }

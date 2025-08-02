@@ -1,6 +1,7 @@
 #include "Datastructure.h"
 #include <glm/gtx/component_wise.hpp>
 #include <thread>
+#include <chrono>
 
 void traverseAndPrint(Node *node)
 {
@@ -27,6 +28,8 @@ void traverseAndPrint(Node *node)
 
 void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
 {
+    std::cout << "Triangles size " << triangles.size() << std::endl;
+
     // Datastructure 1: Simple intersection with one box which contains all triangles
     createBoundingBox(triangles);
     fillTriangleNumbers(0, triangles.size() - 1); // Fill triangle numbers from 0 to size-1
@@ -41,8 +44,8 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     Hlbvh hlbvh;
     int bucketCountHlbvh = 10;
     int sahDepth = 17;
-    float changeGridAmountHlbvh = 1.f;                                                                        // Number of buckets for SAH
-    rootNode = hlbvh.createTree(triangles, triangleNumbers, bucketCount, sahDepth, changeGridAmountHlbvh, 0); // Create the SAH tree with 10 buckets
+    float changeGridAmountHlbvh = 1.f; // Number of buckets for SAH
+    // rootNode = hlbvh.createTree(triangles, triangleNumbers, bucketCount, sahDepth, changeGridAmountHlbvh, 0); // Create the SAH tree with 10 buckets
     std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
     /* std::cout << sah.sahBucketCost(triangles,triangleNumbers) << std::endl; // Print the cost of the SAH bucket
@@ -60,27 +63,62 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     // int gridSize = lbvh.gridSize(triangles);
     // std::cout << "Grid Size: " << gridSize << std::endl;
     float changeGridAmount = 1.f;
-    // rootNode = lbvh.createTree(triangles, changeGridAmount);
+    rootNode = lbvh.createTree(triangles, changeGridAmount);
     // std::cout << "LBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
+
+    UniformGrid uniformGrid;
+    avgTriangleSize = lbvh.avgTriangleSize(triangles) * 2;
+    triangleGridCells = std::move(uniformGrid.trianglesToGridCells(triangles, avgTriangleSize));
+    gridCellsIndex = std::move(uniformGrid.gridCellsIndex(triangleGridCells)); // Generate the grid cells index for quick access
+    gridBorderMin = uniformGrid.gridBorderMin;
+    gridBorderMax = uniformGrid.gridBorderMax;
+    gridBorder = uniformGrid.gridBorder;
 }
 
 std::vector<int> Datastructure::checkIntersection(const Ray &ray, int &boxCount)
 {
-    // Datastructure 1: Simple intersection with one box which contains all triangles
+    UniformGrid uniformGrid;
+    // auto startInit = std::chrono::high_resolution_clock::now();
 
-    // traverseAndPrint(rootNode);
-    // Traverse tree for Lbvh and ...
+    std::vector<int> uniformGridCollected = uniformGrid.traverseAndCollectTriangles(triangleGridCells, gridCellsIndex, ray, gridBorderMin, gridBorderMax, gridBorder, avgTriangleSize);
+    // return uniformGridCollected;
+    // End the timer
+    /* auto endInit = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsedInit = endInit - startInit;
+
+    std::cout << "Time taken for OBJ Loading: " << elapsedInit.count() << " seconds " << std::endl; */
 
     std::vector<int> collectedIndices;
+
     nodeBoundingBoxIntersection(rootNode, ray, collectedIndices, boxCount);
+    /*
+    if (!uniformGridCollected.empty())
+    {
+    std::cout << "show all collected Indices:";
+    for (const int &index : collectedIndices)
+    {
+        std::cout << index << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "show all Uniform Grid collected Indices:";
+    for (const int &index : uniformGridCollected)
+    {
+        std::cout << index << " ";
+    }
+    std::cout << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    } */
+
+    return uniformGridCollected; // Return the collected indices from the uniform grid traversal
     return collectedIndices;
 
+    /*
     // Simple Check with one bounding box
     if (intersectRayAabb(ray, minBox, maxBox))
     {
         return triangleNumbers;
     }
-    return std::vector<int>();
+    return std::vector<int>(); */
 }
 
 void Datastructure::createBoundingBox(const std::vector<Triangle> &triangles)
@@ -617,7 +655,7 @@ Node *Sah::createTree(const std::vector<Triangle> &triangles, std::vector<int> &
 std::vector<Hlbvh::mortonTriangle> Hlbvh::mortonCodes(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, float &changeGridAmount)
 {
     // Mildly changed lbvh version. This Version can use triangle numbers, so not all triangles are needed but just the ones
-    // in the current node. 
+    // in the current node.
     Lbvh lbvh;
     std::vector<Triangle> trianglesForLbvh;
     for (const int &tNumber : triangleNumbers)
@@ -788,4 +826,233 @@ Node *Hlbvh::createTree(const std::vector<Triangle> &triangles, std::vector<int>
     node->right = createTree(triangles, bucketSplit.second, bucketCount, sahDepth, changeGridAmount, sahCurrentDepth + 1); // Create the right subtree with the right bucket
 
     return node;
+}
+std::pair<glm::ivec3, glm::ivec3> UniformGrid::gridCellsFromTriangle(const Triangle &triangle, const float &avgTriangleSize)
+{
+    glm::vec3 minBox(0.0f);
+    glm::vec3 maxBox(0.0f);
+    // Get Bounding Box of Triangle and use it to calculate in which grid cell it is located
+    minBox = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+    maxBox = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+    minBox = glm::min(minBox, glm::vec3(triangle.pointOne) / triangle.pointOne.w);
+    minBox = glm::min(minBox, glm::vec3(triangle.pointTwo) / triangle.pointTwo.w);
+    minBox = glm::min(minBox, glm::vec3(triangle.pointThree) / triangle.pointThree.w);
+    maxBox = glm::max(maxBox, glm::vec3(triangle.pointOne) / triangle.pointOne.w);
+    maxBox = glm::max(maxBox, glm::vec3(triangle.pointTwo) / triangle.pointTwo.w);
+    maxBox = glm::max(maxBox, glm::vec3(triangle.pointThree) / triangle.pointThree.w);
+
+    glm::ivec3 cellBeginning = glm::floor(minBox / avgTriangleSize);
+    // it works with floor with the examples I used for now. If weird artifacts appear, try ceil
+    // but ceil increases time complexity by 4
+    glm::ivec3 cellEnd = glm::floor(maxBox / avgTriangleSize);
+    return std::make_pair(cellBeginning, cellEnd);
+}
+int UniformGrid::trianglesCellsCount(const std::vector<Triangle> &triangles, const float &avgTriangleSize)
+{
+
+    Lbvh lbvh;
+    int cellCount = 0;
+    // go through all triangles and count the number of grid cells they occupy
+    for (const Triangle &triangle : triangles)
+    {
+        std::pair<glm::ivec3, glm::ivec3> cells = gridCellsFromTriangle(triangle, avgTriangleSize);
+        // Example: Cell 5 to 7 are occupied, this would be 5,6,7 = 3 cells = 7 + 1 - 5
+        cellCount += (cells.second.x + 1 - cells.first.x) * (cells.second.y + 1 - cells.first.y) * (cells.second.z + 1 - cells.first.z);
+        gridBorderMin = glm::min(gridBorderMin, cells.first);
+        gridBorderMax = glm::max(gridBorderMax, cells.second);
+    }
+    // Calculate the grid border and use the highest value in each direction
+    // so the grid border stretches the same in both negative and positive direction
+    /* gridBorder.x = std::max(abs(gridBorderMin.x), abs(gridBorderMax.x));
+    gridBorder.y = std::max(abs(gridBorderMin.y), abs(gridBorderMax.y));
+    gridBorder.z = std::max(abs(gridBorderMin.z), abs(gridBorderMax.z)); */
+    gridBorder = gridBorderMax - gridBorderMin + 1;
+    std::cout << "Grid Border: " << gridBorder.x << ", " << gridBorder.y << ", " << gridBorder.z << std::endl;
+    return cellCount;
+}
+
+std::vector<int> UniformGrid::gridCellsIndex(std::vector<std::pair<int, int>> &triangleGridCells)
+{
+    int counter = 0;
+    int cellIndexCounter = 0;
+    int lastNumber = -1;
+    std::vector<int> cellIndex(gridBorder.x + gridBorder.x * gridBorder.y + gridBorder.x * gridBorder.y * gridBorder.z + 1, -1);
+    for (const auto &cell : triangleGridCells)
+    {
+        // std::cout << "Cell: " << cell.first << ", Index: " << cell.second << std::endl;
+
+        if (cell.first != lastNumber)
+        {
+            // store where a new cellNumber starts in the cellIndex vector
+            // This is used to quickly find the start of a cell in the triangleGridCells vector
+            cellIndex[cell.first] = counter;
+            // cellIndexCounter += 1;
+            lastNumber = cell.first; // Update the last number to the current cell number
+        }
+        counter += 1;
+    }
+    return cellIndex;
+}
+std::vector<std::pair<int, int>> UniformGrid::trianglesToGridCells(const std::vector<Triangle> &triangles, const float &avgTriangleSize)
+{
+    // Initialize vector and allocate space for the grid cells
+    std::vector<std::pair<int, int>> gridCells(trianglesCellsCount(triangles, avgTriangleSize));
+    int counter = 0;
+    int normalized_x = gridBorderMin.x;
+    int normalized_y = gridBorderMin.y;
+    int normalized_z = gridBorderMin.z;
+    int counterCells = 0;
+    for (const Triangle &triangle : triangles)
+    {
+        std::pair<glm::ivec3, glm::ivec3> cells = gridCellsFromTriangle(triangle, avgTriangleSize);
+        for (int x = cells.first.x; x <= cells.second.x; ++x)
+        {
+            for (int y = cells.first.y; y <= cells.second.y; ++y)
+            {
+                for (int z = cells.first.z; z <= cells.second.z; ++z)
+                {
+                    // Normalize the grid Cells to start from 0,0,0
+                    int dx = x - normalized_x;
+                    int dy = y - normalized_y;
+                    int dz = z - normalized_z;
+                    // Calculate the index in the gridCells vector
+                    int index = dx + dy * gridBorder.x + gridBorder.y * gridBorder.x * dz;
+                    gridCells[counterCells] = std::make_pair(index, counter);
+                    counterCells += 1; // Increment the counter for each cell
+                }
+            }
+        }
+        counter += 1; // Increment the counter for each triangle
+    }
+    // Sorting the grid cells
+    std::sort(gridCells.begin(), gridCells.end(), [](const std::pair<int, int> &a, const std::pair<int, int> &b)
+              { return a.first < b.first; });
+    return gridCells;
+}
+
+std::vector<int> UniformGrid::traverseAndCollectTriangles(std::vector<std::pair<int, int>> &trianglesToGridCells, std::vector<int> &gridCellsIndex, const Ray &ray, glm::ivec3 &gridBorderMin, glm::ivec3 &gridBorderMax, glm::ivec3 &gridBorder, float &avgTriangleSize)
+{
+    // auto startInit1 = std::chrono::high_resolution_clock::now();
+
+    std::vector<int> collectedTriangles; // Vector to hold the collected triangle indices
+    // Initialize all needed variables
+    glm::ivec3 currentCell = glm::floor(ray.origin / avgTriangleSize); // values i,j and k which show current cell
+    currentCell -= gridBorderMin;                                      // Normalize the current cell to the grid border
+    glm::dvec3 normalizedRayDirection = glm::normalize(ray.direction); // Normalize the ray direction
+    glm::dvec3 delta; // values deltaX deltaY and deltaZ
+    delta.x = normalizedRayDirection.x != 0.0 ? static_cast<double>(avgTriangleSize) / std::abs(normalizedRayDirection.x)
+                                              : std::numeric_limits<double>::infinity();
+    delta.y = normalizedRayDirection.y != 0.0 ? static_cast<double>(avgTriangleSize) / std::abs(normalizedRayDirection.y)
+                                              : std::numeric_limits<double>::infinity();
+    delta.z = normalizedRayDirection.z != 0.0 ? static_cast<double>(avgTriangleSize) / std::abs(normalizedRayDirection.z)
+                                              : std::numeric_limits<double>::infinity();
+    glm::ivec3 p = glm::sign(ray.direction); // values pX pY and pZ, sign returns -1, 0 or 1 depending on the sign of the value
+    // Calculates the next boundary in each direction. when the direction is positive, it adds 1 to the current cell, when negative it adds nothing
+    glm::dvec3 nextBoundary = (glm::dvec3(currentCell + gridBorderMin) + glm::dvec3(p.x > 0, p.y > 0, p.z > 0)) * static_cast<double>(avgTriangleSize);
+    glm::dvec3 d; // values dX dY and dZ
+    d.x = normalizedRayDirection.x != 0.0 ? (nextBoundary.x - ray.origin.x) / normalizedRayDirection.x
+                                          : std::numeric_limits<double>::infinity();
+    d.y = normalizedRayDirection.y != 0.0 ? (nextBoundary.y - ray.origin.y) / normalizedRayDirection.y
+                                          : std::numeric_limits<double>::infinity();
+    d.z = normalizedRayDirection.z != 0.0 ? (nextBoundary.z - ray.origin.z) / normalizedRayDirection.z
+                                          : std::numeric_limits<double>::infinity();
+    /* std::cout << "Grid Border Min: " << gridBorderMin.x << ", " << gridBorderMin.y << ", " << gridBorderMin.z << std::endl;
+    std::cout << "Grid Border Max: " << gridBorderMax.x << ", " << gridBorderMax.y << ", " << gridBorderMax.z << std::endl;
+    std::cout << "Grid Border: " << gridBorder.x << ", " << gridBorder.y << ", " << gridBorder.z << std::endl;
+    std::cout << "Current Cell: " << currentCell.x << ", " << currentCell.y << ", " << currentCell.z << std::endl; */
+    // Start traversing the grid cells
+    // the currentCell is normalized, so it goes until the normalized grid border. After this there are no more grid cells to traverse
+
+    // if p.x  is negative then currentCell.x should be checked against 0 and not against gridBorder.x (Same for y and z)
+    int borderX1 = (p.x < 0) ? 0 : INT_MIN;
+    int borderX2 = (p.x < 0) ? INT_MAX : gridBorder.x;
+
+    int borderY1 = (p.y < 0) ? 0 : INT_MIN;
+    int borderY2 = (p.y < 0) ? INT_MAX : gridBorder.y;
+
+    int borderZ1 = (p.z < 0) ? 0 : INT_MIN;
+    int borderZ2 = (p.z < 0) ? INT_MAX : gridBorder.z;
+
+    /*
+    std::cout << "Average Triangle Size: " << avgTriangleSize << std::endl;
+    std::cout << "Normalized Ray Direction: " << normalizedRayDirection.x << ", " << normalizedRayDirection.y << ", " << normalizedRayDirection.z << std::endl;
+    std::cout << "Delta: " << delta.x << ", " << delta.y << ", " << delta.z << std::endl;
+    std::cout << "Next Boundary: " << nextBoundary.x << ", " << nextBoundary.y << ", " << nextBoundary.z << std::endl;
+    std::cout << "d" << d.x << ", " << d.y << ", " << d.z << std::endl; */
+
+    // auto endInit1 = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> elapsedInit1 = endInit1 - startInit1;
+    // std::cout << "Time taken for Start Loading: " << elapsedInit1.count() << " seconds " << std::endl;
+    // auto startInit = std::chrono::high_resolution_clock::now();
+
+    while (currentCell.x >= borderX1 && currentCell.x <= borderX2 && currentCell.y >= borderY1 && currentCell.y <= borderY2 && currentCell.z >= borderZ1 && currentCell.z <= borderZ2)
+    {
+        // std::cout << "Current Cell: " << currentCell.x << ", " << currentCell.y << ", " << currentCell.z << std::endl;
+
+        if (d.x <= d.y && d.x <= d.z)
+        {
+
+            currentCell.x += p.x; // Move to the next cell in the x direction
+            d.x += delta.x;       // Update the distance to the next boundary in the x direction
+        }
+        else if (d.y <= d.x && d.y <= d.z)
+        {
+
+            currentCell.y += p.y; // Move to the next cell in the y direction
+            d.y += delta.y;       // Update the distance to the next boundary in the y direction
+        }
+        else if (d.z <= d.x && d.z <= d.y)
+        {
+            currentCell.z += p.z; // Move to the next cell in the z direction
+            d.z += delta.z;       // Update the distance to the next boundary in the z direction
+        }
+        // Check if the normalized current cell is within the grid.
+        // if not then I don't have to check for triangles
+        // when it isn't within the grid this means that the ray was initialized outside of the grid
+        // so now the algorithm continues until it is inside the grid
+        if (currentCell.x < 0 || currentCell.y < 0 || currentCell.z < 0 || currentCell.x > gridBorder.x || currentCell.y > gridBorder.y || currentCell.z > gridBorder.z)
+        {
+            continue; // Skip to the next iteration if the cell is out of bounds
+        }
+        // std::cout << "Current Cell1: " << currentCell.x << ", " << currentCell.y << ", " << currentCell.z << std::endl;
+        /* if (currentCell.x + currentCell.y * gridBorder.x + currentCell.z * gridBorder.x * gridBorder.y >= gridCellsIndex.size() || currentCell.x + currentCell.y * gridBorder.x + currentCell.z * gridBorder.x * gridBorder.y < 0)
+        {
+            std::cout << "Error: startI is out of bounds: " << currentCell.x + currentCell.y * gridBorder.x + currentCell.z * gridBorder.x * gridBorder.y << " for trianglesToGridCells size: " << trianglesToGridCells.size() << std::endl;
+            std::cout << "Current Cell: " << currentCell.x << ", " << currentCell.y << ", " << currentCell.z << std::endl;
+            std::cout << "Grid Border: " << gridBorder.x << ", " << gridBorder.y << ", " << gridBorder.z << std::endl;
+            std::cout << "Grid Cells Index Size: " << gridCellsIndex.size() << std::endl;
+            std::cout << "Triangles To Grid Cells Size: " << trianglesToGridCells.size() << std::endl;
+            std::cout << "Current Cell Index: " << currentCell.x + currentCell.y * gridBorder.x + currentCell.z * gridBorder.x * gridBorder.y << std::endl;
+            std::cout << "Current Cell Index: " << currentCell.x + currentCell.y * gridBorder.x + currentCell.z * gridBorder.x * gridBorder.y << std::endl;
+            std::cout << "Current Cell: " << currentCell.x << ", " << currentCell.y << ", " << currentCell.z << std::endl;
+            std::cout << "Grid Border: " << gridBorder.x << ", " << gridBorder.y << ", " << gridBorder.z << std::endl;
+            continue; // Skip to the next iteration if the start index is out of bounds
+        } */
+        int startI = gridCellsIndex[currentCell.x + currentCell.y * gridBorder.x + currentCell.z * gridBorder.x * gridBorder.y]; // Get the start index of the current cell in the gridCellsIndex vector
+
+        if (startI == -1)
+        {
+            continue; // If the grid cells Index is -1, skip to the next iteration because this means that there are no triangles in this grid cell
+        }
+        int gridValue = trianglesToGridCells[startI].first;
+
+        while (gridValue == trianglesToGridCells[startI].first)
+        {
+            // Collect the triangle index from the grid cell
+            collectedTriangles.emplace_back(trianglesToGridCells[startI].second); // Add the triangle index to the collected triangles
+
+            startI += 1; // Increment the start index until the grid value changes
+            if (startI >= trianglesToGridCells.size())
+            {
+                break; // End Search if the start index is out of bounds
+            }
+        }
+    }
+    // auto endInit = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> elapsedInit = endInit - startInit;
+    // std::cout << "Time taken for Next Loading: " << elapsedInit.count() << " seconds " << std::endl;
+
+
+    // std::cout << "Skipping cell with no triangles: " << currentCell.x << ", " << currentCell.y << ", " << currentCell.z << std::endl;
+    return collectedTriangles; // Return an empty vector for now, as this function is not yet implemented
 }
