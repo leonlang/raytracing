@@ -75,6 +75,8 @@ namespace Intersection
             float shadowDistance = Intersection::rayTriangleIntersection(shadowRay, triangles[k]);
             if (shadowDistance != -INFINITY && shadowDistance > 0.001f) // 0.001f is a small bias to avoid self-hit with shadows
             // if (shadowDistance != -INFINITY && shadowDistance > 0.00000007f && shadowDistance < 0.00000175f) // Adds the range where AmbientOcclusion is applied.
+            // if (shadowDistance != -INFINITY && shadowDistance > 0.00000007f && shadowDistance < 0.00000375f) // Adds the range where AmbientOcclusion is applied.
+
             // For further away objects, the AO is not applied
             {
                 return true;

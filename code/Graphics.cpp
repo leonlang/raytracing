@@ -56,12 +56,26 @@ namespace Graphics
         return glm::vec3(u, v, w);
     }
 
+    // I used it for Sphere Color Interpolation
+    // Only works if the obj file has normal coordinates to interpolate with.
+    glm::vec3 interpolateNormal(const Triangle& triangle, const glm::vec3& barycentricCoords) {
+	// By multiplying each vertex normal by its corresponding barycentric coordinate, 
+	// I am weighting each normal by how much influence that vertex has at the point of interest.
+	return glm::normalize(
+		barycentricCoords.x * triangle.normalOne +
+		barycentricCoords.y * triangle.normalTwo +
+		barycentricCoords.z * triangle.normalThree
+	);
+}
+
     // Lighting with Phong Illumination Model
     // Concept is found here: https://cg.informatik.uni-freiburg.de/course_notes/graphics_02_shading.pdf
     glm::vec3 phongIllumination(ObjectManager &objManager, const Triangle &triangle, const Ray &ray, const glm::vec3 &lightPos, const float &distance)
     {
+        // default object Color if no other one is specified
+        // glm::vec3 objColor(0.1f, 0.2f, 0.1f);
+        glm::vec3 objColor(1.0f, 1.0f, 1.0f);
 
-        glm::vec3 objColor(1, 1, 1);
         if (!triangle.textureName.empty())
         {
             glm::vec3 intersectionPoint = ray.origin + distance * ray.direction;
@@ -97,8 +111,7 @@ namespace Graphics
             objColor.x = texData[texIndex + 0] / 255.0f;
             objColor.y = texData[texIndex + 1] / 255.0f;
             objColor.z = texData[texIndex + 2] / 255.0f;
-            }
-            
+            }     
         }
         // Phong illumination model
         // std::cout << "Triangle Diffuse: " << triangle.diffuse.x << " " << triangle.diffuse.y << " " << triangle.diffuse.z << std::endl;
@@ -114,7 +127,7 @@ namespace Graphics
         glm::vec3 barycentricCoords = calculateBarycentricCoords(triangle, intersectionPoint);
 
         // Interpolate the normal at the intersection point using barycentric coordinates
-        // glm::vec3 n = interpolateNormal(*triangle, barycentricCoords); // normal
+        // glm::vec3 n = interpolateNormal(triangle, barycentricCoords); // normal
         // test with normal
         glm::vec3 n = calculateTriangleNormal(triangle);
         // Calculate the direction vector from the intersection point to the light source

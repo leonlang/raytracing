@@ -33,6 +33,8 @@ namespace Scene
         glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
     void bistroInterior(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
         glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
+    void bistroInterior1(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
+        glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
     void bistroExterior(ObjectManager &objManager, glm::mat4 &viewMatrix, const float &angleDegree,
         glm::vec2 &imageSize, glm::vec4 &lightPos, glm::vec3 &backgroundColor);
 }
