@@ -104,7 +104,7 @@ namespace Graphics
             }  */
            if (texIndex + 2 >= texDim.x * texDim.y * 3)
             {
-                std::cout << "Texture Index out of bounds: " << texIndex << " for texture: " << triangle.textureName << std::endl;
+                // std::cout << "Texture Index out of bounds: " << texIndex << " for texture: " << triangle.textureName << std::endl;
                 return glm::vec3(1.0f, 1.0f, 1.0f); // Return white color if out of bounds
             }
             else {

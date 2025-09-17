@@ -201,7 +201,7 @@ int main()
 		// put this into the function which sends out rays
 
 		// Choose Szene
-		Scene::bistroInterior1(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
+		Scene::bistroExterior(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
 
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
