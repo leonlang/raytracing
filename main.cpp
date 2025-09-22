@@ -198,7 +198,7 @@ int main()
 		glm::vec2 imageSize;
 		glm::vec4 lightPos;
 		glm::vec3 backgroundColor(0.f, 0.f, 0.f);
-		std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(1, 500.0f);
+		std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(16, 500.0f);
 		std::vector<glm::vec3> shadowPointsAO = Graphics::ambientOcclusionShadowPoints(); // Get the shadow points for ambient occlusion
 		// put this into the function which sends out rays
 

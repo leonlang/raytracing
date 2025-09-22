@@ -35,19 +35,20 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     // If you want to use a lot of shadows, I recommend using SAH, as this is normally the fastest for traversing
 
     // Datastructure 1: Simple intersection with one box which contains all triangles
-    // createBoundingBox(triangles);
-    // fillTriangleNumbers(0, triangles.size() - 1); // Fill triangle numbers from 0 to size-1
+    // Also used by SAH and HLBVH so don't remove this if you want to use either of them.
+    createBoundingBox(triangles);
+    fillTriangleNumbers(0, triangles.size() - 1); // Fill triangle numbers from 0 to size-1
 
     // Lbvh Datastructure
     Lbvh lbvh;
     float changeGridAmount = 1.f;
-    rootNode = lbvh.createTree(triangles, changeGridAmount);
+    // rootNode = lbvh.createTree(triangles, changeGridAmount);
 
     // Sah Datastructure
     Sah sah;
-    int bucketCount = 12; // Number of buckets for SAH
-    // rootNode = sah.createTree(triangles, triangleNumbers, bucketCount); // Create the SAH tree with 12 buckets
-    // std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
+    int bucketCount = 2; // Number of buckets for SAH
+    rootNode = sah.createTree(triangles, triangleNumbers, bucketCount); // Create the SAH tree with 12 buckets
+    std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
     // Sah Datastructure
     Hlbvh hlbvh;
