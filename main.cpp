@@ -27,6 +27,8 @@
 // For OBJ Objects the library tinyObjLoader is used: https://github.com/tinyobjloader/tinyobjloader
 // For Image Reading and Output the libraries stb: https://github.com/nothings/stb
 // and CImg: https://cimg.eu/ are used.
+// In the folder images/ is most of the analysis I did for the project saved.
+// For example images/lbvh contains an excel sheet which shows the time measurements and some images of my terminal output for the scenes
 
 // Combines the Methods for Data Hierarchies Triangle Intersection and Shadows
 glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastructure &datastructure, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates, int &boxCount, glm::vec3 &backgroundColor)
@@ -95,14 +97,14 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 				};
 			//color = color * (float(randomCoordinates.size() - shadowAmount)) / float(randomCoordinates.size());
 			 color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 0.05f / float(randomCoordinates.size());
-			Graphics::reinhardtToneMapping(color, 0.15f, 2.2f);
+			// Graphics::reinhardtToneMapping(color, 0.15f, 2.2f);
 
 
 
 		}
 		// Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
 			// gamma for bistro interior:
-			// Graphics::reinhardtToneMapping(color, 0.25f, 1.2f);
+			Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
 
 		colorPoint = glm::vec3(glm::ceil(color * 255.0f)); // Check if any point is over 255 and cout it
 	}
@@ -128,7 +130,7 @@ ImageData sendRaysAndIntersectPointsColors(
 	// specify how many threads the hardware should use.
 	// If you specify more threads than available cores, the hardware will run at max and possibly everything else will run slower or crash.
 	// I would recommend half the number of threads as available cores.
-	const int numThreads = std::thread::hardware_concurrency(); // / 2;
+	const int numThreads = 1; // std::thread::hardware_concurrency(); // / 2;
 	std::vector<std::thread> threads;
 	// store the results I get from each thread in a vector
 	std::vector<std::vector<std::tuple<glm::vec2, glm::vec3, int>>> threadResults(numThreads);
@@ -201,7 +203,7 @@ int main()
 		// put this into the function which sends out rays
 
 		// Choose Szene
-		Scene::bistroExterior(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
+		Scene::forest(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
 
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));

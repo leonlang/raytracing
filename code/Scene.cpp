@@ -220,7 +220,7 @@ namespace Scene
         objManager.transformTriangles("grass", Transformation::rotateObjX(glm::radians(-90.f)));
         objManager.transformTriangles("grass", Transformation::scaleObj(10.f, 6.f, 7.f));
         // objManager.transformTriangles("grass", Transformation::changeObjPosition(glm::vec3(0.f, -90.f, -400.f)));
-        /*
+        
         // Back  Trees
         objManager.loadObjFile("tree1", "./obj/chestnut/chestnut.obj");
         objManager.transformTriangles("tree1", Transformation::scaleObj(1.7f, 1.7f, 1.7f));
@@ -278,7 +278,7 @@ namespace Scene
         objManager.transformTriangles("tree9", Transformation::rotateObjX(glm::radians(-90.f)));
         objManager.transformTriangles("tree9", Transformation::rotateObjY(glm::radians(-270.f)));
         objManager.transformTriangles("tree9", Transformation::changeObjPosition(glm::vec3(0, -80, -250)));
-        */
+        
         // objManager.transformTriangles(treeName, Transformation::changeObjPosition(glm::vec3(-6.f + i * 2.f, -25.f, -25.f + i * 2.f)));
         /* objManager.transformTriangles("hairball", Transformation::rotateObjX(glm::radians(180.f)));
         objManager.transformTriangles("hairball", Transformation::rotateObjY(glm::radians(0.f)));

@@ -30,9 +30,18 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
 {
     std::cout << "Triangles size " << triangles.size() << std::endl;
 
+    // Uncomment the Datastructure you want to use
+    // If you want to use uniform grid, you have to uncomment the uniform grid  in checkIntersection as well.
+    // If you want to use a lot of shadows, I recommend using SAH, as this is normally the fastest for traversing
+
     // Datastructure 1: Simple intersection with one box which contains all triangles
-    createBoundingBox(triangles);
-    fillTriangleNumbers(0, triangles.size() - 1); // Fill triangle numbers from 0 to size-1
+    // createBoundingBox(triangles);
+    // fillTriangleNumbers(0, triangles.size() - 1); // Fill triangle numbers from 0 to size-1
+
+    // Lbvh Datastructure
+    Lbvh lbvh;
+    float changeGridAmount = 1.f;
+    rootNode = lbvh.createTree(triangles, changeGridAmount);
 
     // Sah Datastructure
     Sah sah;
@@ -46,7 +55,7 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     int sahDepth = 17;
     float changeGridAmountHlbvh = 1.f; // Number of buckets for SAH
     // rootNode = hlbvh.createTree(triangles, triangleNumbers, bucketCount, sahDepth, changeGridAmountHlbvh, 0); // Create the SAH tree with 10 buckets
-    std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
+    // std::cout << "HLBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
     /* std::cout << sah.sahBucketCost(triangles,triangleNumbers) << std::endl; // Print the cost of the SAH bucket
     // cout all sorted triangle numbers
@@ -56,32 +65,23 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     // Print amount of triangles in each bucket:
     std::cout << "Bucket Split: ";
     std::cout << "Left Bucket: " << bucketSplit.first.size() << " triangles, Right Bucket: " << bucketSplit.second.size() << " triangles" << std::endl; */
-    // Lbvh Datastructure
-    /**/
-    Lbvh lbvh;
-    // glm::vec3 avgSize = lbvh.avgTriangleSize(triangles);
-    // int gridSize = lbvh.gridSize(triangles);
-    // std::cout << "Grid Size: " << gridSize << std::endl;
-    float changeGridAmount = 1.f;
-    rootNode = lbvh.createTree(triangles, changeGridAmount);
-    // std::cout << "LBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
-    UniformGrid uniformGrid;
-    avgTriangleSize = lbvh.avgTriangleSize(triangles) * 30.f;
+    /* UniformGrid uniformGrid;
+    avgTriangleSize = lbvh.avgTriangleSize(triangles);
     triangleGridCells = std::move(uniformGrid.trianglesToGridCells(triangles, avgTriangleSize));
     gridCellsIndex = std::move(uniformGrid.gridCellsIndex(triangleGridCells)); // Generate the grid cells index for quick access
     gridBorderMin = uniformGrid.gridBorderMin;
     gridBorderMax = uniformGrid.gridBorderMax;
-    gridBorder = uniformGrid.gridBorder;
+    gridBorder = uniformGrid.gridBorder; */
 }
 
 std::vector<int> Datastructure::checkIntersection(const Ray &ray, int &boxCount)
 {
-    UniformGrid uniformGrid;
+    // UniformGrid uniformGrid;
     // auto startInit = std::chrono::high_resolution_clock::now();
 
     // uncomment next 2 lines to use uniform grid
-    //std::vector<int> uniformGridCollected = uniformGrid.traverseAndCollectTriangles(triangleGridCells, gridCellsIndex, ray, gridBorderMin, gridBorderMax, gridBorder, avgTriangleSize);
+    // std::vector<int> uniformGridCollected = uniformGrid.traverseAndCollectTriangles(triangleGridCells, gridCellsIndex, ray, gridBorderMin, gridBorderMax, gridBorder, avgTriangleSize);
     // return uniformGridCollected;
 
     // End the timer
@@ -309,7 +309,7 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
     float avgTSize = avgTriangleSize(triangles) / changeGridAmount;
     int gridSize = static_cast<int>(std::ceil(gridPair.first / avgTSize));
 
-    // std::cout << "Grid size: " << gridSize << std::endl;
+    std::cout << "Grid size: " << gridSize << std::endl;
     // mortonTriangle mTriangle;
     // mTriangle.bits =  bits2;// Initialize with 24 bits
     for (int i = 0; i < triangles.size(); ++i)
