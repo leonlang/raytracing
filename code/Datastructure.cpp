@@ -43,20 +43,22 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     Lbvh lbvh;
     float changeGridAmount = 1.f;
     // rootNode = lbvh.createTree(triangles, changeGridAmount);
+    // std::cout << "LBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
+
 
     // Sah Datastructure
     Sah sah;
-    int bucketCount = 2; // Number of buckets for SAH
-    rootNode = sah.createTree(triangles, triangleNumbers, bucketCount); // Create the SAH tree with 12 buckets
-    std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
+    int bucketCount = 12; // Number of buckets for SAH
+    // rootNode = sah.createTree(triangles, triangleNumbers, bucketCount); // Create the SAH tree with 12 buckets
+    // std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
     // Sah Datastructure
     Hlbvh hlbvh;
-    int bucketCountHlbvh = 10;
-    int sahDepth = 17;
+    int bucketCountHlbvh = 12;
+    int sahDepth = 25;
     float changeGridAmountHlbvh = 1.f; // Number of buckets for SAH
-    // rootNode = hlbvh.createTree(triangles, triangleNumbers, bucketCount, sahDepth, changeGridAmountHlbvh, 0); // Create the SAH tree with 10 buckets
-    // std::cout << "HLBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
+    rootNode = hlbvh.createTree(triangles, triangleNumbers, bucketCountHlbvh, sahDepth, changeGridAmountHlbvh, 0); // Create the SAH tree with 12 buckets
+    std::cout << "HLBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
     /* std::cout << sah.sahBucketCost(triangles,triangleNumbers) << std::endl; // Print the cost of the SAH bucket
     // cout all sorted triangle numbers
@@ -425,8 +427,6 @@ Node *Lbvh::createTree(const std::vector<Triangle> &triangles, float &changeGrid
         nodes = newNodes;
     }
 
-    std::cout << "LBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
-
     Node *root = nodes[0]; // The last remaining node is the root of the tree
     return root;           // Return the root node of the tree
     // traverseAndPrint(root); // Traverse and print the tree structure
@@ -744,8 +744,6 @@ Node *Hlbvh::createLbvhTree(const std::vector<Triangle> &triangles, std::vector<
         }
         nodes = newNodes;
     }
-
-    std::cout << "LBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
     Node *root = nodes[0]; // The last remaining node is the root of the tree
     return root;           // Return the root node of the tree

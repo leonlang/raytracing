@@ -103,8 +103,10 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 
 		}
 		// Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
-			// gamma for bistro interior:
-			Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
+		// Tone Mapping for bistro interior:
+		//Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
+		// Tone Mapping for forest:
+		Graphics::reinhardtToneMapping(color, 0.027f, 8.2f);
 
 		colorPoint = glm::vec3(glm::ceil(color * 255.0f)); // Check if any point is over 255 and cout it
 	}
@@ -203,7 +205,7 @@ int main()
 		// put this into the function which sends out rays
 
 		// Choose Szene
-		Scene::forest(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
+		Scene::bistroInterior1(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
 
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
