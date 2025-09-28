@@ -25,7 +25,7 @@
 // For Image Reading and Output the libraries stb: https://github.com/nothings/stb
 // and CImg: https://cimg.eu/ are used.
 // In the folder images/ is most of the analysis I did for the project saved.
-// For example images/lbvh contains an excel sheet which shows the time measurements and some images of my terminal output for the scenes
+// For example images/lbvh contains an pdf sheet which shows the time measurements and some images of my terminal output for the scenes
 
 // Combines the Methods for Data Hierarchies Triangle Intersection and Shadows
 glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastructure &datastructure, const glm::vec3 &lightPos, std::vector<glm::vec3> &randomCoordinates, int &boxCount, glm::vec3 &backgroundColor)
