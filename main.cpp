@@ -1,5 +1,4 @@
 ﻿// simple_raytracer.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 
 // Import my own header files
 #include "code/Transformation.h"
@@ -20,9 +19,7 @@
 #define TINYOBJLOADER_USE_MAPBOX_EARCUT
 #include "tiny_obj_loader.h"
 
-
 // Notes:
-// Each covered Function presents an introduction. For example: Triangle Intersection corresponds to the same section in the report
 // For Vec Math the library glm is used: https://github.com/g-truc/glm
 // For OBJ Objects the library tinyObjLoader is used: https://github.com/tinyobjloader/tinyobjloader
 // For Image Reading and Output the libraries stb: https://github.com/nothings/stb
@@ -61,12 +58,13 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 	}
 	else
 	{
-		// std::cout << "Trianlge prpertie at lastIntersectionNumber: " << objManager.triangles.at(lastIntersectionNumber).pointOne.x << ", " << objManager.triangles.at(lastIntersectionNumber).pointOne.y << ", " << objManager.triangles.at(lastIntersectionNumber).pointOne.z << std::endl;
 		color = Graphics::phongIllumination(objManager, objManager.triangles.at(lastIntersectionNumber), ray, lightPos, distanceComparison);
 
 		// Turn on Shadows or Ambient Occlusion
 		// For Shadows go to Intersections.cpp and turn on smallBias or it won't work
 		// For Ambient Occlusion do same
+
+		// Right now Soft Shadows with 16 light points are used
 		bool isShadow = true;
 		bool isAmbientOcclusion = false;
 		int shadowAmount = 0;
@@ -79,8 +77,6 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 				// which contains the indexes of the triangles which are left
 				// The for looop goes through those triangles
 				if (Intersection::shadowIntersection(objManager, datastructure, lightPosChanged, distanceComparison, ray))
-
-				// if (Intersection::shadowIntersection(objManager, datastructure, point, distanceComparison, ray))
 				{
 					shadowAmount++;
 				};
@@ -95,19 +91,13 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 				{
 					shadowAmount++;
 				};
-			//color = color * (float(randomCoordinates.size() - shadowAmount)) / float(randomCoordinates.size());
-			 color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 0.05f / float(randomCoordinates.size());
-			// Graphics::reinhardtToneMapping(color, 0.15f, 2.2f);
-
-
-
+			color = color * float(randomCoordinates.size() - shadowAmount) / float(randomCoordinates.size()) + color * float(shadowAmount) * 0.05f / float(randomCoordinates.size());
 		}
 		// Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
 		// Tone Mapping for bistro interior:
-		//Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
-		// Tone Mapping for forest:
+		// Graphics::reinhardtToneMapping(color, 0.25f, 1.f);
+		// Tone Mapping for Bistro Exterior:
 		Graphics::reinhardtToneMapping(color, 0.027f, 8.2f);
-
 		colorPoint = glm::vec3(glm::ceil(color * 255.0f)); // Check if any point is over 255 and cout it
 	}
 
@@ -130,9 +120,8 @@ ImageData sendRaysAndIntersectPointsColors(
 
 	ImageData imageData;
 	// specify how many threads the hardware should use.
-	// If you specify more threads than available cores, the hardware will run at max and possibly everything else will run slower or crash.
-	// I would recommend half the number of threads as available cores.
-	const int numThreads = std::thread::hardware_concurrency(); // / 2;
+	// I would recommend half the number of threads as available cores to not overheat the system.
+	const int numThreads = std::thread::hardware_concurrency() / 2;
 	std::vector<std::thread> threads;
 	// store the results I get from each thread in a vector
 	std::vector<std::vector<std::tuple<glm::vec2, glm::vec3, int>>> threadResults(numThreads);
@@ -184,8 +173,6 @@ ImageData sendRaysAndIntersectPointsColors(
 
 int main()
 {
-	// Choose Szene
-
 	// save images at different degrees based on camera
 	for (float angleDegree = 0; angleDegree < 360; angleDegree = angleDegree + 400)
 	{
@@ -201,10 +188,7 @@ int main()
 		glm::vec4 lightPos;
 		glm::vec3 backgroundColor(0.f, 0.f, 0.f);
 		std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(16, 500.0f);
-
-		// std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(16, 500.0f);
 		std::vector<glm::vec3> shadowPointsAO = Graphics::ambientOcclusionShadowPoints(); // Get the shadow points for ambient occlusion
-		// put this into the function which sends out rays
 
 		// Choose Szene
 		Scene::bistroExterior(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
@@ -225,11 +209,9 @@ int main()
 
 		std::cout << "Time taken for OBJ Loading: " << elapsedInit.count() << " seconds " << std::endl;
 
-		// Start the timer for RaymIntersection
+		// Start the timer for Ray Intersection
 		auto startDatastructureInit = std::chrono::high_resolution_clock::now();
 
-		// Example Triangles
-		// datastructure.fillTriangleNumbers(0, objManager.triangles.size() - 1);
 		datastructure.initDatastructure({objManager.triangles});
 
 		auto endDatastructureInit = std::chrono::high_resolution_clock::now();
@@ -250,12 +232,7 @@ int main()
 		std::cout << "Time taken for Intersection: " << elapsed.count() << " seconds " << std::endl;
 
 		// Draw Image based on found Points
-		// drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
-		// Graphics::drawImage(imageSize, points.imagePoints, points.imageColors, angleDegree, true, false);
-		// glm::vec3 heatmapColor = Graphics::getHeatmapColor(1000, 10000);
-		// std::cout << "Heatmap Color: " << heatmapColor.x << ", " << heatmapColor.y << ", " << heatmapColor.z << std::endl;
-		// std::vector<glm::vec3> heatmapColors = Graphics::convertToHeatmap(boxCounts, 10000);
-		// Store Image
+		// Store Normal Image
 		Graphics::drawImage(imageSize, points.imagePoints, points.imageColors, std::to_string(int(angleDegree)), true, false);
 		// Store Heatmap Image
 		Graphics::drawImage(imageSize, points.imagePoints, Graphics::convertToHeatmap(boxCounts, 3000), "_heatmap", true, false);

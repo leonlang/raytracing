@@ -58,15 +58,15 @@ namespace Graphics
 
     // I used it for Sphere Color Interpolation
     // Only works if the obj file has normal coordinates to interpolate with.
-    glm::vec3 interpolateNormal(const Triangle& triangle, const glm::vec3& barycentricCoords) {
-	// By multiplying each vertex normal by its corresponding barycentric coordinate, 
-	// I am weighting each normal by how much influence that vertex has at the point of interest.
-	return glm::normalize(
-		barycentricCoords.x * triangle.normalOne +
-		barycentricCoords.y * triangle.normalTwo +
-		barycentricCoords.z * triangle.normalThree
-	);
-}
+    glm::vec3 interpolateNormal(const Triangle &triangle, const glm::vec3 &barycentricCoords)
+    {
+        // By multiplying each vertex normal by its corresponding barycentric coordinate,
+        // I am weighting each normal by how much influence that vertex has at the point of interest.
+        return glm::normalize(
+            barycentricCoords.x * triangle.normalOne +
+            barycentricCoords.y * triangle.normalTwo +
+            barycentricCoords.z * triangle.normalThree);
+    }
 
     // Lighting with Phong Illumination Model
     // Concept is found here: https://cg.informatik.uni-freiburg.de/course_notes/graphics_02_shading.pdf
@@ -102,16 +102,17 @@ namespace Graphics
             std::cout << " Ray Direction: " << ray.direction.x << " " << ray.direction.y << " " << ray.direction.z << std::endl;
             std::cout << "Distance: " << distance << std::endl;
             }  */
-           if (texIndex + 2 >= texDim.x * texDim.y * 3)
+            if (texIndex + 2 >= texDim.x * texDim.y * 3)
             {
                 // std::cout << "Texture Index out of bounds: " << texIndex << " for texture: " << triangle.textureName << std::endl;
                 return glm::vec3(1.0f, 1.0f, 1.0f); // Return white color if out of bounds
             }
-            else {
-            objColor.x = texData[texIndex + 0] / 255.0f;
-            objColor.y = texData[texIndex + 1] / 255.0f;
-            objColor.z = texData[texIndex + 2] / 255.0f;
-            }     
+            else
+            {
+                objColor.x = texData[texIndex + 0] / 255.0f;
+                objColor.y = texData[texIndex + 1] / 255.0f;
+                objColor.z = texData[texIndex + 2] / 255.0f;
+            }
         }
         // Phong illumination model
         // std::cout << "Triangle Diffuse: " << triangle.diffuse.x << " " << triangle.diffuse.y << " " << triangle.diffuse.z << std::endl;
@@ -242,23 +243,6 @@ namespace Graphics
     glm::vec3 getHeatmapColor(int value, int maxVal)
     {
 
-        /*
-        float ratio = static_cast<float>(value) / static_cast<float>(maxVal);
-
-        // Calculate RGB values (each in the range [0, 1])
-        float r = std::min(1.0f, 2.0f * ratio);                           // Red channel increases with value
-        int r_i = glm::floor(r * 255.0f);
-        float g = std::min(1.0f, 2.0f * (1.0f - std::abs(ratio - 0.5f))); // Green peaks in the middle
-        int g_i = glm::floor(g * 255.0f);
-
-        float b = std::min(1.0f, 2.0f * (1.0f - ratio));                  // Blue channel decreases with value
-        int b_i = glm::floor(b * 255.0f);
-
-
-        // Color components: x = red, y = green, z = blue
-        return glm::vec3(r_i, g_i, b_i);
-        */
-
         float ratio = static_cast<float>(value) / static_cast<float>(maxVal);
         ratio = glm::clamp(ratio, 0.0f, 1.0f); // Ensure ratio stays in [0, 1]
 
@@ -308,9 +292,8 @@ namespace Graphics
         int b_i = glm::floor((b + m) * 255.0f);
 
         return glm::vec3(r_i, g_i, b_i);
-
-        // return glm::vec3 (std::min(255,value/maxVal * 255),std::min(255,value/maxVal * 255),std::min(255,value/maxVal * 255));
     }
+
     std::vector<glm::vec3> convertToHeatmap(const std::vector<int> &boxCounts, int maxVal)
     {
         std::vector<glm::vec3> heatmapColors;

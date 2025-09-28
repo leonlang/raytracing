@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "Object.h"
 
+// Node structure for BVH
 struct Node
 {
     glm::vec3 minBox;
@@ -52,12 +53,14 @@ public:
     glm::ivec3 gridBorder = glm::ivec3(0);
     float avgTriangleSize = 0.f;
 };
+
 class Lbvh
 {
 public:
     struct mortonTriangle
     {
         std::bitset<60> bits; // Adjust size as needed
+        // Can't be done dynamically when the Code is compiled because C++ doesn't allow that
         int index;
     };
     float avgTriangleSize(const std::vector<Triangle> &triangles);
@@ -73,11 +76,11 @@ class Sah
 public:
     const float sahBucketCost(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers); // Cost of SAH Bucket
     const float sahBucketCostOptimized(std::pair<glm::vec3, glm::vec3> &boundingBox, int triangleCount);
-
     std::vector<int> getSortedTriangleNumbers(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, glm::vec3 &minBox, glm::vec3 &maxBox);
     std::pair<std::vector<int>, std::vector<int>> findBestBucketSplit(const std::vector<Triangle> &triangles, std::vector<int> &sortedTriangleNumbers, int &bucketCount);
     Node *createTree(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, int &bucketCount);
 };
+
 class Hlbvh
 {
 public:
@@ -95,18 +98,11 @@ class UniformGrid
 public:
     glm::ivec3 gridBorderMin = glm::ivec3(INT_MAX, INT_MAX, INT_MAX);
     glm::ivec3 gridBorderMax = glm::ivec3(INT_MIN, INT_MIN, INT_MIN);
-
     glm::ivec3 gridBorder = glm::ivec3(0);
-
-    // go through all triangles and calculate the avg triangle size
     std::pair<glm::ivec3, glm::ivec3> gridCellsFromTriangle(const Triangle &triangle, const float &avgTriangleSize);
-    // create a grid size based on the avg triangle size
-    // go through all triangles and check how many cells each one takes up
     int trianglesCellsCount(const std::vector<Triangle> &triangles, const float &avgTriangleSize);
-    // allocate vector/array size based on the number of cells taken up by triangles
-    // go through all triangles and add the cell index and triangle Number to the vector/array
     std::vector<int> gridCellsIndex(std::vector<std::pair<int, int>> &triangleGridCells);
     std::vector<std::pair<int, int>> trianglesToGridCells(const std::vector<Triangle> &triangles, const float &avgTriangleSize);
-    std::vector<int> traverseAndCollectTriangles(std::vector<std::pair<int, int>> &trianglesToGridCells , std::vector<int> &gridCellsIndex, const Ray &ray, glm::ivec3 &gridBorderMin, glm::ivec3 &gridBorderMax, glm::ivec3 &gridBorder,float &avgTriangleSize);
+    std::vector<int> traverseAndCollectTriangles(std::vector<std::pair<int, int>> &trianglesToGridCells, std::vector<int> &gridCellsIndex, const Ray &ray, glm::ivec3 &gridBorderMin, glm::ivec3 &gridBorderMax, glm::ivec3 &gridBorder, float &avgTriangleSize);
 };
 #endif // DATASTRUCTURE_H

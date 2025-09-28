@@ -3,6 +3,7 @@
 #include <thread>
 #include <chrono>
 
+// Go through the BVH tree and print the nodes (for testing purposes)
 void traverseAndPrint(Node *node)
 {
     if (!node)
@@ -26,6 +27,7 @@ void traverseAndPrint(Node *node)
     traverseAndPrint(node->right);
 }
 
+// Initialize the Datastructure and choose which one to use
 void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
 {
     std::cout << "Triangles size " << triangles.size() << std::endl;
@@ -40,91 +42,49 @@ void Datastructure::initDatastructure(const std::vector<Triangle> &triangles)
     fillTriangleNumbers(0, triangles.size() - 1); // Fill triangle numbers from 0 to size-1
 
     // Lbvh Datastructure
-    Lbvh lbvh;
-    float changeGridAmount = 1.f;
+    // Lbvh lbvh;
+    // float changeGridAmount = 1.f;
     // rootNode = lbvh.createTree(triangles, changeGridAmount);
     // std::cout << "LBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
-
     // Sah Datastructure
     Sah sah;
-    int bucketCount = 12; // Number of buckets for SAH
+    int bucketCount = 12;                                               // Number of buckets for SAH
     rootNode = sah.createTree(triangles, triangleNumbers, bucketCount); // Create the SAH tree with 12 buckets
     std::cout << "SAH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
-    // Sah Datastructure
-    Hlbvh hlbvh;
-    int bucketCountHlbvh = 12;
-    int sahDepth = 25;
-    float changeGridAmountHlbvh = 1.f; // Number of buckets for SAH
+    // HLBVH Datastructure
+    // Hlbvh hlbvh;
+    // int bucketCountHlbvh = 12;
+    // int sahDepth = 25;
+    // float changeGridAmountHlbvh = 1.f; // Number of buckets for SAH
     // rootNode = hlbvh.createTree(triangles, triangleNumbers, bucketCountHlbvh, sahDepth, changeGridAmountHlbvh, 0); // Create the SAH tree with 12 buckets
     // std::cout << "HLBVH: Creating tree with " << triangles.size() << " triangles" << std::endl;
 
-    /* std::cout << sah.sahBucketCost(triangles,triangleNumbers) << std::endl; // Print the cost of the SAH bucket
-    // cout all sorted triangle numbers
-    std::vector<int> sortedTriangleNumbers = sah.getSortedTriangleNumbers(triangles, triangleNumbers);
-    std::cout << std::endl;
-    std::pair<std::vector<int>, std::vector<int>> bucketSplit = sah.findBestBucketSplit(triangles, sortedTriangleNumbers, 10); // Find the best bucket split for 10 buckets
-    // Print amount of triangles in each bucket:
-    std::cout << "Bucket Split: ";
-    std::cout << "Left Bucket: " << bucketSplit.first.size() << " triangles, Right Bucket: " << bucketSplit.second.size() << " triangles" << std::endl; */
-
-    /* UniformGrid uniformGrid;
-    avgTriangleSize = lbvh.avgTriangleSize(triangles);
-    triangleGridCells = std::move(uniformGrid.trianglesToGridCells(triangles, avgTriangleSize));
-    gridCellsIndex = std::move(uniformGrid.gridCellsIndex(triangleGridCells)); // Generate the grid cells index for quick access
-    gridBorderMin = uniformGrid.gridBorderMin;
-    gridBorderMax = uniformGrid.gridBorderMax;
-    gridBorder = uniformGrid.gridBorder; */
+    // UniformGrid uniformGrid;
+    // avgTriangleSize = lbvh.avgTriangleSize(triangles);
+    // triangleGridCells = std::move(uniformGrid.trianglesToGridCells(triangles, avgTriangleSize));
+    // gridCellsIndex = std::move(uniformGrid.gridCellsIndex(triangleGridCells)); // Generate the grid cells index for quick access
+    // gridBorderMin = uniformGrid.gridBorderMin;
+    // gridBorderMax = uniformGrid.gridBorderMax;
+    // gridBorder = uniformGrid.gridBorder;
 }
 
 std::vector<int> Datastructure::checkIntersection(const Ray &ray, int &boxCount)
 {
+    // uncomment next lines to use uniform grid
     // UniformGrid uniformGrid;
     // auto startInit = std::chrono::high_resolution_clock::now();
-
-    // uncomment next 2 lines to use uniform grid
     // std::vector<int> uniformGridCollected = uniformGrid.traverseAndCollectTriangles(triangleGridCells, gridCellsIndex, ray, gridBorderMin, gridBorderMax, gridBorder, avgTriangleSize);
     // return uniformGridCollected;
 
-    // End the timer
-    /* auto endInit = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsedInit = endInit - startInit;
-
-    std::cout << "Time taken for OBJ Loading: " << elapsedInit.count() << " seconds " << std::endl; */
-
+    // Traverse the BHV tree and return the collected triangle indices
     std::vector<int> collectedIndices;
-
     nodeBoundingBoxIntersection(rootNode, ray, collectedIndices, boxCount);
-    /*
-    if (!uniformGridCollected.empty())
-    {
-    std::cout << "show all collected Indices:";
-    for (const int &index : collectedIndices)
-    {
-        std::cout << index << " ";
-    }
-    std::cout << std::endl;
-    std::cout << "show all Uniform Grid collected Indices:";
-    for (const int &index : uniformGridCollected)
-    {
-        std::cout << index << " ";
-    }
-    std::cout << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    } */
-
     return collectedIndices;
-
-    /*
-    // Simple Check with one bounding box
-    if (intersectRayAabb(ray, minBox, maxBox))
-    {
-        return triangleNumbers;
-    }
-    return std::vector<int>(); */
 }
 
+// Create a bounding box that contains all triangles
 void Datastructure::createBoundingBox(const std::vector<Triangle> &triangles)
 {
     minBox = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
@@ -142,6 +102,7 @@ void Datastructure::createBoundingBox(const std::vector<Triangle> &triangles)
     }
 }
 
+// Create a bounding box that contains all triangles based on given triangle numbers
 void Datastructure::createBoundingBoxWithNumbers(const std::vector<Triangle> &triangles, const std::vector<int> &triangleNumbers)
 {
     minBox = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
@@ -171,6 +132,8 @@ void Datastructure::fillTriangleNumbers(int a, int b)
     }
 }
 
+// Check if the ray intersects the bounding box of the node
+// Slab Test is used here
 bool Datastructure::intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, const glm::vec3 &maxBox)
 {
     // Calculate the t values for each pair of planes
@@ -222,6 +185,7 @@ bool Datastructure::intersectRayAabb(const Ray &ray, const glm::vec3 &minBox, co
     return true;
 }
 
+// Combine multiple bounding boxes into one that contains all of them
 std::pair<glm::vec3, glm::vec3> Datastructure::combineBoundingBoxes(std::vector<std::pair<glm::vec3, glm::vec3>> boundingBoxes)
 {
     glm::vec3 minBox(FLT_MAX, FLT_MAX, FLT_MAX);
@@ -236,14 +200,48 @@ std::pair<glm::vec3, glm::vec3> Datastructure::combineBoundingBoxes(std::vector<
     return std::make_pair(minBox, maxBox);
 }
 
+// Traverse the BVH tree and collect triangle indices for intersected bounding boxes
+void Datastructure::nodeBoundingBoxIntersection(Node *node, const Ray &ray, std::vector<int> &collectedIndices, int &boxCount)
+{
+    if (!node)
+        return; // Ensure node is valid
+
+    // Count this bounding box as traversed
+    ++boxCount;
+
+    // If it's a leaf node containing a triangle, collect its index
+    if (node->oneTriangleLeft)
+    {
+        collectedIndices.push_back(node->triangleIndex);
+        return;
+    }
+
+    // If there's no intersection, return early
+    if (!intersectRayAabb(ray, node->minBox, node->maxBox))
+    {
+        return;
+    }
+
+    // Recurse for left and right children
+    nodeBoundingBoxIntersection(node->left, ray, collectedIndices, boxCount);
+    nodeBoundingBoxIntersection(node->right, ray, collectedIndices, boxCount);
+}
+
+// At this Point LBVH functions are implemented.
+// Source for Morton Codes:
+// G. M. Morton.
+// "A Computer Oriented Geodetic Data Base and a New Technique in File Sequencing."
+// IBM Germany Scientific Symposium Series, IBM, 1996.
+
+// Calculate the morton code for a given coordinate
 std::bitset<60> Lbvh::coordinateToMorton(glm::vec3 &coordinate)
 {
     glm::ivec3 coordinateInt = glm::ivec3(coordinate);
-    // std::cout << "Coordinate: " << coordinateInt.x << ", " << coordinateInt.y << ", " << coordinateInt.z << std::endl;
-    // Store in 16 bits (bool true = 1, false = 0)
-    const int bitSize = 20;            // Each coordinate will be stored in 24 bits
+    // Change bitSize for smaller or larger morton codes
+    // This has to be adjusted manually, because C++ doesn't allow dynamic bitset sizes
+    const int bitSize = 20;            // Each coordinate will be stored in 20 bits
     const int bitNumber = bitSize * 3; // Total bits for x, y, z coordinates
-    // Create a bitset with 72 bits. Convert each coordinate to bits and then use them to create 3x bit morton code
+    // Create a bitset with 60 bits. Convert each coordinate to bits and then use them to create 3x bit morton code
     std::bitset<bitNumber> bits;
     for (int i = 0; i < 3; ++i) // For each coordinate x, y, z
     {
@@ -263,12 +261,14 @@ std::bitset<60> Lbvh::coordinateToMorton(glm::vec3 &coordinate)
     return bits;
 }
 
+// Calculate the center coordinates of a triangle
 glm::vec3 Lbvh::centralCoordinates(const Triangle &triangle)
 {
     glm::vec3 center = (triangle.pointOne + triangle.pointTwo + triangle.pointThree) / 3.0f;
     return center;
 }
 
+// Calculate the average triangle size in the scene
 float Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
 {
     glm::vec3 avgSize(0.0f);
@@ -289,10 +289,10 @@ float Lbvh::avgTriangleSize(const std::vector<Triangle> &triangles)
         avgSize += size;
     }
     avgSize /= static_cast<float>(triangles.size());
-    // std::cout << "Average Triangle Size: " << avgSize.x << ", " << avgSize.y << ", " << avgSize.z << std::endl;
     return glm::compMax(avgSize);
 }
 
+// Creaete the grid for LBVH
 std::pair<float, glm::vec3> Lbvh::gridConstruction(const std::vector<Triangle> &triangles)
 {
     Datastructure datastructure;
@@ -303,6 +303,7 @@ std::pair<float, glm::vec3> Lbvh::gridConstruction(const std::vector<Triangle> &
     return std::pair<float, glm::vec3>(maxObjectSize, negativeCoordinates);
 }
 
+// Calculate the morton codes for all triangles in the scene
 std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> &triangles, float &changeGridAmount)
 {
     std::vector<mortonTriangle> mortonTriangles;
@@ -313,13 +314,9 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
     int gridSize = static_cast<int>(std::ceil(gridPair.first / avgTSize));
 
     std::cout << "Grid size: " << gridSize << std::endl;
-    // mortonTriangle mTriangle;
-    // mTriangle.bits =  bits2;// Initialize with 24 bits
     for (int i = 0; i < triangles.size(); ++i)
     {
         int gridNumber;
-
-        // int gridNumber = static_cast<int>()
         // centered coordinates of the triangle and made positive should there be negative coordinates
         glm::vec3 centerPositive = centralCoordinates(triangles[i]) - gridPair.second;
         glm::vec3 triangleGridPosition = centerPositive / avgTSize; // Calculate the grid position of the triangle
@@ -332,25 +329,17 @@ std::vector<Lbvh::mortonTriangle> Lbvh::mortonCodes(const std::vector<Triangle> 
     // Sort the morton triangles based on their bits
 
     // String Sort, for when you need more then 64 bits
+    // Makes the sorting a lot slower
     /* std::sort(mortonTriangles.begin(), mortonTriangles.end(), [](const mortonTriangle & firstMorton, const mortonTriangle & secondMorton) {
         return firstMorton.bits.to_string() < secondMorton.bits.to_string();
     }); */
     std::sort(mortonTriangles.begin(), mortonTriangles.end(), [](const mortonTriangle &firstMorton, const mortonTriangle &secondMorton)
               { return firstMorton.bits.to_ulong() < secondMorton.bits.to_ulong(); });
 
-    /* for (const auto& mt : mortonTriangles) {
-        std::cout << mt.bits << " - Index: " << mt.index << std::endl;
-        // Print center coordinates of the triangle with same index
-        glm::vec3 center = centralCoordinates(triangles[mt.index]) - gridPair.second; // Adjust center coordinates by subtracting the negative offset
-        std::cout << "Center Coordinates: " << (int)center.x << ", " << (int)center.y << ", " << (int)center.z << std::endl;
-        glm::vec3 triangleGridPosition = center / avgTSize; // Calculate the grid position of the triangle
-        std::cout << "Triangle Grid Position: " << (int)triangleGridPosition.x << ", " << (int)triangleGridPosition.y << ", " << (int)triangleGridPosition.z << std::endl;
-        std::cout << avgTSize << std::endl;
-    } */
-
     return mortonTriangles;
 }
 
+// Create the LBVH tree later used for traversing
 Node *Lbvh::createTree(const std::vector<Triangle> &triangles, float &changeGridAmount)
 {
     // Calculate the number of bits needed to represent the grid size
@@ -432,31 +421,13 @@ Node *Lbvh::createTree(const std::vector<Triangle> &triangles, float &changeGrid
     // traverseAndPrint(root); // Traverse and print the tree structure
 }
 
-void Datastructure::nodeBoundingBoxIntersection(Node *node, const Ray &ray, std::vector<int> &collectedIndices, int &boxCount)
-{
-    if (!node)
-        return; // Ensure node is valid
+// At this Point SAH functions are implemented.
+// Source for SAH:
+// J. David MacDonald, Kellogg S. Booth.
+// "Heuristics for ray tracing using space subdivision."
+// The Visual Computer, vol. 6, no. 3, pp. 153–166, 1990.
 
-    // Count this bounding box as traversed
-    ++boxCount;
-
-    // If it's a leaf node containing a triangle, collect its index
-    if (node->oneTriangleLeft)
-    {
-        collectedIndices.push_back(node->triangleIndex);
-        return;
-    }
-
-    // If there's no intersection, return early
-    if (!intersectRayAabb(ray, node->minBox, node->maxBox))
-    {
-        return;
-    }
-
-    // Recurse for left and right children
-    nodeBoundingBoxIntersection(node->left, ray, collectedIndices, boxCount);
-    nodeBoundingBoxIntersection(node->right, ray, collectedIndices, boxCount);
-}
+// Calculate the cost of a split.
 const float Sah::sahBucketCost(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers)
 {
     Datastructure datastructure;
@@ -466,6 +437,8 @@ const float Sah::sahBucketCost(const std::vector<Triangle> &triangles, std::vect
     float cost = costBox * triangleNumbers.size(); // Cost of the bounding box is the volume times the number of triangles in it
     return cost;
 }
+
+// Optimized version of sahBucketCost which takes the bounding box as input instead of calculating it again
 const float Sah::sahBucketCostOptimized(std::pair<glm::vec3, glm::vec3> &boundingBox, int triangleCount)
 {
     // Cost of Box is the volume of the bounding box
@@ -474,6 +447,7 @@ const float Sah::sahBucketCostOptimized(std::pair<glm::vec3, glm::vec3> &boundin
     return cost;
 }
 
+// Sort the triangles based on the longest axis of the bounding box
 std::vector<int> Sah::getSortedTriangleNumbers(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, glm::vec3 &minBox, glm::vec3 &maxBox)
 {
     // Calculate the bounding box size in each dimension
@@ -498,6 +472,7 @@ std::vector<int> Sah::getSortedTriangleNumbers(const std::vector<Triangle> &tria
     return triangleNumbers;
 }
 
+// Find the best split of triangles using the buckets
 std::pair<std::vector<int>, std::vector<int>> Sah::findBestBucketSplit(const std::vector<Triangle> &triangles, std::vector<int> &sortedTriangleNumbers, int &bucketCount)
 {
     std::vector<int> bucket;
@@ -509,10 +484,9 @@ std::pair<std::vector<int>, std::vector<int>> Sah::findBestBucketSplit(const std
     // Initialize the best cost to a large value
     float bestCost = FLT_MAX;
 
-    /*
     // Iterate through possible split points
     // Old option which creates a new bounding box for each split
-    for (int i = 1; i < bucketCount; ++i)
+    /* for (int i = 1; i < bucketCount; ++i)
     {
 
         int split = (i * sortedTriangleNumbers.size()) / bucketCount;
@@ -581,6 +555,7 @@ std::pair<std::vector<int>, std::vector<int>> Sah::findBestBucketSplit(const std
     return {bestLeftBucket, bestRightBucket};
 }
 
+// Create the SAH tree later used for traversing
 Node *Sah::createTree(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, int &bucketCount)
 {
     if (triangleNumbers.empty())
@@ -593,7 +568,6 @@ Node *Sah::createTree(const std::vector<Triangle> &triangles, std::vector<int> &
     {
         // If there's only one triangle, create a leaf node with that triangle's index
         // std::cout << "Creating leaf node with triangle index: " << triangleNumbers[0] << std::endl;
-
         return new Node(triangleNumbers[0]);
     }
 
@@ -608,20 +582,23 @@ Node *Sah::createTree(const std::vector<Triangle> &triangles, std::vector<int> &
         node->right = new Node(triangleNumbers[1]);
         return node;
     }
-    // End the timer
 
     Node *node = new Node(datastructure.minBox, datastructure.maxBox);
     std::vector<int> sortedTriangleNumbers = getSortedTriangleNumbers(triangles, triangleNumbers, datastructure.minBox, datastructure.maxBox); // Get the sorted triangle numbers based on the largest axis
     std::pair<std::vector<int>, std::vector<int>> bucketSplit = findBestBucketSplit(triangles, sortedTriangleNumbers, bucketCount);            // Find the best bucket split for specified bucket count
-
-    // std::cout << "Creating SAH tree with " << triangleNumbers.size() << " triangles" << std::endl;
-    // std::cout << "Bucket Split: Left Bucket: " << bucketSplit.first.size() << " triangles, Right Bucket: " << bucketSplit.second.size() << " triangles" << std::endl;
-    node->left = createTree(triangles, bucketSplit.first, bucketCount);   // Create the left subtree with the left bucket
-    node->right = createTree(triangles, bucketSplit.second, bucketCount); // Create the right subtree with the right bucket
+    node->left = createTree(triangles, bucketSplit.first, bucketCount);                                                                        // Create the left subtree with the left bucket
+    node->right = createTree(triangles, bucketSplit.second, bucketCount);                                                                      // Create the right subtree with the right bucket
 
     return node;
 }
 
+// At this Point SAH functions are implemented.
+// Source for LBVH:
+// Jacopo Pantaleoni, David Luebke.
+// "HLBVH: Hierarchical LBVH construction for real-time ray tracing of dynamic geometry."
+// Proceedings of the Conference on High Performance Graphics, pp. 87–95, 2010.
+
+// Calculate the morton codes for all triangles which are used by the current node from SAH
 std::vector<Hlbvh::mortonTriangle> Hlbvh::mortonCodes(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, float &changeGridAmount)
 {
     // Mildly changed lbvh version. This Version can use triangle numbers, so not all triangles are needed but just the ones
@@ -663,15 +640,13 @@ std::vector<Hlbvh::mortonTriangle> Hlbvh::mortonCodes(const std::vector<Triangle
     return mortonTriangles;
 }
 
+// Create the LBVH tree used for the rest of the tree after SAH depth is reached
 Node *Hlbvh::createLbvhTree(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, float &changeGridAmount)
 {
     // mildly changed lbvh version. This Version can use triangle numbers, so not all triangles are needed but just the ones
     // in the current node. This wasn't needed in the original LBVH implementation, as all triangles were used to create the full tree.
     // Here I create only part of the tree, after SAH depth is reached.
 
-    // std::pair<int, float> gridSizePair = gridSize(triangles);
-    // Calculate the number of bits needed to represent the grid size
-    // const size_t bits_needed = static_cast<size_t>(log2(gridSizePair.first)) + 1;
     Lbvh lbvh;
     std::vector<Hlbvh::mortonTriangle> mortonCodeTriangles = mortonCodes(triangles, triangleNumbers, changeGridAmount); // Get the morton code for the triangles
     std::vector<Node *> nodes;                                                                                          // Vector to hold the nodes of the tree
@@ -747,8 +722,9 @@ Node *Hlbvh::createLbvhTree(const std::vector<Triangle> &triangles, std::vector<
 
     Node *root = nodes[0]; // The last remaining node is the root of the tree
     return root;           // Return the root node of the tree
-    // traverseAndPrint(root); // Traverse and print the tree structure
 }
+
+// Create the HLBVH tree later used for traversing
 Node *Hlbvh::createTree(const std::vector<Triangle> &triangles, std::vector<int> &triangleNumbers, int &bucketCount, int &sahDepth, float &changeGridAmount, int sahCurrentDepth)
 {
     if (triangleNumbers.empty())
@@ -776,7 +752,6 @@ Node *Hlbvh::createTree(const std::vector<Triangle> &triangles, std::vector<int>
         node->right = new Node(triangleNumbers[1]);
         return node;
     }
-    // End the timer
 
     Node *node = new Node(datastructure.minBox, datastructure.maxBox);
     // If the current depth is greater than the sah depth, create a LBVH tree
@@ -787,11 +762,8 @@ Node *Hlbvh::createTree(const std::vector<Triangle> &triangles, std::vector<int>
     Sah sah;
     std::vector<int> sortedTriangleNumbers = sah.getSortedTriangleNumbers(triangles, triangleNumbers, datastructure.minBox, datastructure.maxBox); // Get the sorted triangle numbers based on the largest axis
     std::pair<std::vector<int>, std::vector<int>> bucketSplit = sah.findBestBucketSplit(triangles, sortedTriangleNumbers, bucketCount);            // Find the best bucket split for specified bucket count
-
-    // std::cout << "Creating SAH tree with " << triangleNumbers.size() << " triangles" << std::endl;
-    // std::cout << "Bucket Split: Left Bucket: " << bucketSplit.first.size() << " triangles, Right Bucket: " << bucketSplit.second.size() << " triangles" << std::endl;
-    node->left = createTree(triangles, bucketSplit.first, bucketCount, sahDepth, changeGridAmount, sahCurrentDepth + 1);   // Create the left subtree with the left bucket
-    node->right = createTree(triangles, bucketSplit.second, bucketCount, sahDepth, changeGridAmount, sahCurrentDepth + 1); // Create the right subtree with the right bucket
+    node->left = createTree(triangles, bucketSplit.first, bucketCount, sahDepth, changeGridAmount, sahCurrentDepth + 1);                           // Create the left subtree with the left bucket
+    node->right = createTree(triangles, bucketSplit.second, bucketCount, sahDepth, changeGridAmount, sahCurrentDepth + 1);                         // Create the right subtree with the right bucket
 
     return node;
 }
@@ -813,6 +785,14 @@ std::pair<glm::ivec3, glm::ivec3> UniformGrid::gridCellsFromTriangle(const Trian
     glm::ivec3 cellEnd = glm::floor(maxBox / avgTriangleSize);
     return std::make_pair(cellBeginning, cellEnd);
 }
+
+// At this Point Uniform Grid functions are implemented.
+// Source for Uniform Grid:
+// John G. Cleary, Geoff Wyvill.
+// "Analysis of an algorithm for fast ray tracing using uniform space subdivision."
+// The Visual Computer, vol. 4, no. 2, pp. 65–83, 1988.
+
+// Count the number of grid cells occupied by all triangles in the scene
 int UniformGrid::trianglesCellsCount(const std::vector<Triangle> &triangles, const float &avgTriangleSize)
 {
 
@@ -834,6 +814,7 @@ int UniformGrid::trianglesCellsCount(const std::vector<Triangle> &triangles, con
     return cellCount;
 }
 
+// Create an index for the grid cells to quickly find the start in the triangleGridCells vector
 std::vector<int> UniformGrid::gridCellsIndex(std::vector<std::pair<int, int>> &triangleGridCells)
 {
     int counter = 0;
@@ -856,6 +837,8 @@ std::vector<int> UniformGrid::gridCellsIndex(std::vector<std::pair<int, int>> &t
     }
     return cellIndex;
 }
+
+// Converts triangles to grid cells
 std::vector<std::pair<int, int>> UniformGrid::trianglesToGridCells(const std::vector<Triangle> &triangles, const float &avgTriangleSize)
 {
     // Initialize vector and allocate space for the grid cells
@@ -893,6 +876,7 @@ std::vector<std::pair<int, int>> UniformGrid::trianglesToGridCells(const std::ve
     return gridCells;
 }
 
+// Traverse the grid cells and collect the triangles.
 std::vector<int> UniformGrid::traverseAndCollectTriangles(std::vector<std::pair<int, int>> &trianglesToGridCells, std::vector<int> &gridCellsIndex, const Ray &ray, glm::ivec3 &gridBorderMin, glm::ivec3 &gridBorderMax, glm::ivec3 &gridBorder, float &avgTriangleSize)
 {
     // auto startInit1 = std::chrono::high_resolution_clock::now();

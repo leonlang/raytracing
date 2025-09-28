@@ -140,4 +140,4 @@ namespace Intersection
             barycentricCoords.y * triangle.normalTwo +
             barycentricCoords.z * triangle.normalThree);
     }
-} // namespace Intersection
+}
