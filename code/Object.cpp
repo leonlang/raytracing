@@ -15,8 +15,6 @@ Triangle::Triangle(glm::vec4 p1, glm::vec4 p2, glm::vec4 p3, glm::vec3 n1, glm::
 Ray::Ray(glm::vec3 d)
     : origin(0.0f, 0.0f, 0.0f), direction(d) {}
 
-// ObjObject::ObjObject() = default;
-
 // Complex Triangle Structures with OBJ
 // Uses Library tinyobjloader
 // https://github.com/tinyobjloader/tinyobjloader
@@ -26,15 +24,6 @@ void ObjectManager::loadObjFile(const std::string &objName, const std::string &o
     ObjObject obj;
     tinyobj::ObjReader reader;
     obj.triangleStartIndex = triangles.size();
-
-    /*
-    // default parameters for objects
-    float ambientStrength = 0.2f;
-    float specularStrength = 0.5f;
-    float shininess = 15.0f;
-
-    obj.objProperties = glm::vec3(ambientStrength, specularStrength, shininess);
-    */
 
     if (!reader.ParseFromFile(objFilename))
     {
@@ -53,11 +42,7 @@ void ObjectManager::loadObjFile(const std::string &objName, const std::string &o
     auto &shapes = reader.GetShapes();
     auto &materials = reader.GetMaterials();
 
-    // std::vector<Triangle> triangles;
-
     // New
-    // std::unordered_map<std::string, unsigned char*> textureData;
-    // std::unordered_map<std::string, glm::ivec2> textureDimensions;
     for (const auto &material : materials)
     {
         if (!material.diffuse_texname.empty())
@@ -135,20 +120,20 @@ void ObjectManager::loadObjFile(const std::string &objName, const std::string &o
                                 {
                                     int u = static_cast<int>(std::floor(tx * texDim.x)) % texDim.x;
                                     // Ensure u is within bounds and doesn't get moduled to 0
-                                    if (tx == 1) {
+                                    if (tx == 1)
+                                    {
                                         u = texDim.x - 1; // Ensure u is within bounds
                                     }
                                     int v = static_cast<int>(std::floor((1.0f - ty) * texDim.y)) % texDim.y;
                                     // Ensure v is within bounds and doesn't get moduled to 0
-                                    if (ty == 1) {
+                                    if (ty == 1)
+                                    {
                                         v = texDim.y - 1; // Ensure v is within bounds
                                     }
 
                                     // Ensure u and v are non-negative
                                     u = (u + texDim.x) % texDim.x;
                                     v = (v + texDim.y) % texDim.y;
-   
-
 
                                     texCoordinate = glm::vec2(u, v);
 
@@ -258,98 +243,3 @@ void ObjectManager::transformTriangles(const std::string &objFilename, const glm
         triangles.at(i).pointThree = matrix * triangles.at(i).pointThree;
     }
 }
-/*
-// check first Triangle point for which coordinate is bigger
-bool compareXPointsOfTriangle(const Triangle& a, const Triangle& b) {
-    return a.pointOne.x < b.pointOne.x;
-}
-bool compareYPointsOfTriangle(const Triangle& a, const Triangle& b) {
-    return a.pointOne.y < b.pointOne.y;
-}
-bool compareZPointsOfTriangle(const Triangle& a, const Triangle& b) {
-    return a.pointOne.z < b.pointOne.z;
-}
-
-// Hierarchical Bounding around Objects
-// Creates a Box around a triangulated object
-std::pair<glm::vec3,glm::vec3> calculateBoundingBoxes(const std::vector<Triangle>& triangles) {
-
-    glm::vec3 minBox = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);;
-    glm::vec3 maxBox = glm::vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-
-    for (const Triangle& t : triangles) {
-        minBox = glm::min(minBox, glm::vec3(t.pointOne));
-        minBox = glm::min(minBox, glm::vec3(t.pointTwo));
-        minBox = glm::min(minBox, glm::vec3(t.pointThree));
-
-        maxBox = glm::max(maxBox, glm::vec3(t.pointOne));
-        maxBox = glm::max(maxBox, glm::vec3(t.pointTwo));
-        maxBox = glm::max(maxBox, glm::vec3(t.pointThree));
-    }
-
-    return { minBox, maxBox };
-}
-
-// Hierarchical Bounding around Objects
-// Triangle Object gets split based on the longest side
-void ObjectManager::splitTrianglesForBox(Node* root) {
-    // Sort triangles: The largest Side of the Box is sorted so I can cut this side of the box in Half
-    // (Triangles get put into right or left side of Tree)
-    float boxXSize = fabs(root->maxBox.x - root->minBox.x);
-    float boxYSize = fabs(root->maxBox.y - root->minBox.y);
-    float boxZSize = fabs(root->maxBox.z - root->minBox.z);
-
-    glm::vec3 minBoxLeft;
-    glm::vec3 maxBoxLeft;
-    glm::vec3 minBoxRight;
-    glm::vec3 maxBoxRight;
-    std::vector<Triangle> trianglesLeftSide;
-    std::vector<Triangle> trianglesRightSide;
-    std::size_t triangleSize = root->triangles.size();
-
-    if (boxXSize > boxYSize && boxXSize > boxZSize) {
-        std::sort(root->triangles.begin(), root->triangles.end(), compareXPointsOfTriangle);
-    }
-    else if (boxYSize > boxXSize && boxYSize > boxZSize) {
-        std::sort(root->triangles.begin(), root->triangles.end(), compareYPointsOfTriangle);
-    }
-    else{
-        std::sort(root->triangles.begin(), root->triangles.end(), compareZPointsOfTriangle);
-    }
-    */
-/* for (Triangle& t : root->triangles) {
-    std::cout << "tX" << t.pointOne.x << std::endl;
-}*/
-/*
-    trianglesLeftSide.insert(trianglesLeftSide.end(), root->triangles.begin(), root->triangles.begin() + triangleSize/2);
-    trianglesRightSide.insert(trianglesRightSide.end(), root->triangles.begin() + triangleSize / 2, root->triangles.end());
-    std::tie(minBoxLeft, maxBoxLeft) = calculateBoundingBoxes(trianglesLeftSide);
-    std::tie(minBoxRight, maxBoxRight) = calculateBoundingBoxes(trianglesRightSide);
-    root->left = new Node(trianglesLeftSide, minBoxLeft, maxBoxLeft);
-    root->right = new Node(trianglesRightSide, minBoxRight, maxBoxRight);
-    // Build Binary Tree Recursively until size is <= triangleSizeStop
-    int triangleSizeStop = 8;
-    if (trianglesLeftSide.size() > triangleSizeStop) {
-        splitTrianglesForBox(root->left);
-    }
-    if (trianglesRightSide.size() > triangleSizeStop) {
-        splitTrianglesForBox(root->right);
-    }
-
-
-    // std::cout << "Triangles" << triangleSize << "Left" << trianglesLeftSide.size() << "Right" << trianglesRightSide.size() << std::endl;
-
-}
-// Hierarchical Bounding around Objects
-// Concept: https://cg.informatik.uni-freiburg.de/course\_notes/graphics\_01\_raycasting.pdf
-void  ObjectManager::createBoundingHierarchy(const std::string& objFilename) {
-
-    std::vector<Triangle>& triangles = objTriangles[objFilename];
-
-    // Assign First Min and Max Box to Triangles
-    std::tie(minBox[objFilename], maxBox[objFilename]) = calculateBoundingBoxes(triangles);
-    Node* root = new Node(triangles, minBox[objFilename], maxBox[objFilename]);
-    splitTrianglesForBox(root);
-    boundingVolumeHierarchy[objFilename] = root;
-}
-*/

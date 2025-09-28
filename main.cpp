@@ -67,7 +67,7 @@ glm::vec3 computeColorPoint(const Ray &ray, ObjectManager &objManager, Datastruc
 		// Turn on Shadows or Ambient Occlusion
 		// For Shadows go to Intersections.cpp and turn on smallBias or it won't work
 		// For Ambient Occlusion do same
-		bool isShadow = false;
+		bool isShadow = true;
 		bool isAmbientOcclusion = false;
 		int shadowAmount = 0;
 		if (isShadow)
@@ -132,7 +132,7 @@ ImageData sendRaysAndIntersectPointsColors(
 	// specify how many threads the hardware should use.
 	// If you specify more threads than available cores, the hardware will run at max and possibly everything else will run slower or crash.
 	// I would recommend half the number of threads as available cores.
-	const int numThreads = 1; // std::thread::hardware_concurrency(); // / 2;
+	const int numThreads = std::thread::hardware_concurrency(); // / 2;
 	std::vector<std::thread> threads;
 	// store the results I get from each thread in a vector
 	std::vector<std::vector<std::tuple<glm::vec2, glm::vec3, int>>> threadResults(numThreads);
@@ -201,11 +201,13 @@ int main()
 		glm::vec4 lightPos;
 		glm::vec3 backgroundColor(0.f, 0.f, 0.f);
 		std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(16, 500.0f);
+
+		// std::vector<glm::vec3> randomCoordinates = Graphics::generateRandomCoordinates(16, 500.0f);
 		std::vector<glm::vec3> shadowPointsAO = Graphics::ambientOcclusionShadowPoints(); // Get the shadow points for ambient occlusion
 		// put this into the function which sends out rays
 
 		// Choose Szene
-		Scene::bistroInterior1(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
+		Scene::bistroExterior(objManager, viewMatrix, angleDegree, imageSize, lightPos, backgroundColor);
 
 		// Transform the view matrix to the object space
 		objManager.applyViewTransformation(glm::inverse(viewMatrix));
@@ -233,6 +235,7 @@ int main()
 		auto endDatastructureInit = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsedDatastructureInit = endDatastructureInit - startDatastructureInit;
 		std::cout << "Time taken for Datastructure Initialization: " << elapsedDatastructureInit.count() << " seconds " << std::endl;
+		std::cout << "Amount of light samples: " << randomCoordinates.size() << std::endl;
 
 		auto start = std::chrono::high_resolution_clock::now();
 		std::vector<int> boxCounts; // Vector to store the number of boxes checked during intersection

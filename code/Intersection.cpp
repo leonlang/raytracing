@@ -13,8 +13,9 @@ namespace Intersection
     }
 
     // Triangle Intersection
-    // This implementation uses the Möller–Trumbore intersection algorithm
-    // Concept for the Algorithm: https://www.graphics.cornell.edu/pubs/1997/MT97.pdf
+    // Reference: Möller, T. & Trumbore, B. (1997).
+    // "Fast, Minimum Storage Ray-Triangle Intersection"
+    // Journal of Graphics Tools.
     float rayTriangleIntersection(const Ray &ray, const Triangle &triangle)
     {
         // Intersection of a ray with a triangle
